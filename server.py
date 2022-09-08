@@ -1,4 +1,5 @@
 import socket;
+import pickle;
 
 class Server:
     def setUpSocketOnCurrentMachine(self):
@@ -22,11 +23,9 @@ class Server:
         encoded = message.encode()
         c.send(encoded)
 
-
     def receive(connection):
         rMessage = connection.recv(1024)
         return rMessage.decode()
-
 
     def receive(c,buffer):
         rMessage = c.recv(buffer)
@@ -39,28 +38,48 @@ class Server:
             client_socket, client_addr = server_socket.accept()
             print('Got connection from', client_addr)
 
-            # send a thank you message to the client. encoding to send byte type.
-            clientSend(client_socket,'Thank you for connecting')
+            # Notify client of successful connection
+            Server.clientSend(client_socket,'Connection successful')
 
             # addressing all the queries posed by a client to which we connected
             while True:
                 # Loop to receive client messages
-                rcvd = client_socket.recieve(client_socket)
+                rcvd = Server.receive(client_socket,1024)
+
                 if not rcvd:
                     continue
                 print("RECEIVED:", rcvd)
 
                 # Authenticate new client (example function)
                 if rcvd == 'AUTH':
-                    client_socket.send(client_socket,"1") # Tell the client to use id = 1
-                # Close the connection with the client
+                    Server.clientSend(client_socket,"1") # Tell the client to use id = 1
+                    # Extra functionality (low priority): connection handling for multiple clients in real time
 
                 if rcvd.startswith("DATA"):
                     data = rcvd.split(" ")
                     print("RECIEVED: ", data)
 
+                if rcvd.startswith("ENCODINGS"):
+                    # Identify the size of data being received/sent
+
+                    # Receive encodings
+                    pickledEncodings = str(rcvd) # String type conversion is a temporary fix, output not correct!
+                    while True:
+                        # Receive until no more messages to receive
+                        rcvd = client_socket.recv(4096)
+                        if not rcvd:
+                            break
+                        pickledEncodings += str(rcvd)
+
+                    #pickledEncodings = dataRcvd
+                    #Encodings = pickle.loads(pickledEncodings) # Fails here
+                    print(pickledEncodings)
+
+
+
                 # if new condition
-            
+
+                # Close the connection with the client
                 if rcvd == 'QUIT':
                     client_socket.close()
                     # Breaking the loop once connection is closed

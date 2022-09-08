@@ -25,7 +25,7 @@ class FileEncoder:
             encodedAttributesOfRow = bitarray()
             
             #this for loop goes over the row and and encodes each attributes individually
-            for attributeIdx in range(0,len(attributeTypesList)):
+            for attributeIdx in range(0,len(self.attributeTypesList)):
                 currentAttribute = recordDict[rec][attributeIdx]
                 encodedAttribute = None
                 
@@ -37,7 +37,7 @@ class FileEncoder:
                     encodedAttribute = bf.set_to_bloom_filter(currentAttribute)                
 
                 assert encodedAttribute != None, encodedAttribute
-                encodedAttributesOfRow.extend(encodedAttribute) # This needs to be fixed - doesn't join the bitarrays.
+                encodedAttributesOfRow.extend(encodedAttribute)
 
             # Concatenate encoded attributes into a single encoding string
             encodedRecord = "".join(str(encodedAttributesOfRow))
