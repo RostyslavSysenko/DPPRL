@@ -1,7 +1,29 @@
 import socket;
 import pickle;
+from Clustering import *
+
+# bit per attribute
+
+#  -> if static 
+# 	-> pass list of rows like [[1:"010010",2:"01100101"]]
+#   -> "static"
+#   -> operation is insert only else return to client error
+# -> if dynamic 
+#   -> "dynamic"
+# 	-> operation {insert,modify,delete}
+# 		-> if insert/delete pass a list of list of single row [[24:"01100101"]]
+# 		-> if modification then pass list of 2 rows (old and new),[[59:"01100101"]],[[30:"01100101"]]
+# in short on each iteration of communication we need to pass following
+#
+# 1. list of row encodings (that list will represent different thing based on description above) 
+# 2. type of linkage "static"/"dynamic"
+# 3. operation to be done
+# 4. dataset/database id
 
 class Server:
+    def __init__(self):
+        self.clusters = ClusterList()
+    
     def setUpSocketOnCurrentMachine(self):
         host = ''
         port = 43555
@@ -53,32 +75,10 @@ class Server:
                 # Authenticate new client (example function)
                 if rcvd == 'AUTH':
                     Server.clientSend(client_socket,"1") # Tell the client to use id = 1
-                    # Extra functionality (low priority): connection handling for multiple clients in real time
-
-                if rcvd.startswith("DATA"):
-                    data = rcvd.split(" ")
-                    print("RECIEVED: ", data)
-
-                if rcvd.startswith("ENCODINGS"):
-                    # Identify the size of data being received/sent
-
-                    # Receive encodings
-                    pickledEncodings = str(rcvd) # String type conversion is a temporary fix, output not correct!
-                    while True:
-                        # Receive until no more messages to receive
-                        rcvd = client_socket.recv(4096)
-                        if not rcvd:
-                            break
-                        pickledEncodings += str(rcvd)
-
-                    #pickledEncodings = dataRcvd
-                    #Encodings = pickle.loads(pickledEncodings) # Fails here
-                    print(pickledEncodings)
-
-
-
-                # if new condition
-
+                    # Extra functionality (low priority): connection handling for multiple clients
+               
+                                               
+        
                 # Close the connection with the client
                 if rcvd == 'QUIT':
                     client_socket.close()
@@ -90,6 +90,7 @@ def main():
     server = Server()
     server_socket = server.setUpSocketOnCurrentMachine()
     server.launchServer(server_socket)
+    
 
 if __name__ == "__main__":
     main()

@@ -4,6 +4,7 @@ from mimetypes import init
 from BloomFilter import *;
 from enum import Enum
 from bitarray import bitarray
+import socket
 
 class FieldType(Enum):
     INT = 1
@@ -14,7 +15,7 @@ class FileEncoder:
         self.attributeTypesList = attributeTypesList
         self.fileLocation = fileLocation
         self.bf = bf
-        self.encoding = None
+        self.encodings = None
 
     def encodeByAttribute(self):
         recordDict = bf.__read_csv_file__(self.fileLocation, True, 0)
@@ -43,8 +44,8 @@ class FileEncoder:
             encodedRecord = "".join(str(encodedAttributesOfRow))
 
             # add the encoding string of the row to the list of all encoded rows
-            allEncodings.append(",",",",str(encodedRecord))
-        self.encoding = allEncodings
+            allEncodings.append(str(encodedRecord))
+        self.encodings = allEncodings
 
     def display(self,headRowNumber):
         # headRowNumber is the number of rows starting from the top
@@ -52,6 +53,7 @@ class FileEncoder:
             print(self.encoding[i])
 
 # Bloom filter configuration settings
+# Extra functionality: Move to a separate configuration file
 bf_len = 50 #50
 bf_num_hash_func = 2 #2
 bf_num_inter = 5
@@ -64,7 +66,7 @@ q = 2
 bf = BF(bf_len, bf_num_hash_func, bf_num_inter, bf_step,
           max_abs_diff, min_val, max_val, q)
 
-# Client
+# Client encoding script 
 ipv4 = socket.AF_INET
 tcp = socket.SOCK_STREAM
 host = '127.0.0.1'
@@ -96,10 +98,11 @@ Encoder.encodeByAttribute()
 print("Sample of encoded data:")
 Encoder.display(5)
 
-# Send the encodings
+# Send the encodings for static linkage
 print("Sending encoded data")
-s.send("ENCODINGS".encode())
-
+for r in Encoder.encodings:
+    cmd = "INSERT ", r
+    s.send(cmd.encode())
 
 serializedEncodings = pickle.dumps(Encoder.encoding) # Serialization
 s.send(serializedEncodings)
