@@ -1,4 +1,5 @@
 from Clustering import *
+from staticLinkage import staticLinkage 
 # -----------------TESTING------------------------
 
 # # TEST SET 1: some tests on mean vectors
@@ -111,3 +112,12 @@ from Clustering import *
 # print(cList)
 
 # # # # All tests in TEST2 are behaving apropriately on current version of code
+
+
+###### Initial incremental linkage tests 
+
+# a = ['11001', '11011', '11110']
+# b = ['11001', '11011', '11110']
+# c = ['11011', '10001', '11110']
+
+# print(staticLinkage(a,b,c))
