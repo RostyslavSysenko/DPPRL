@@ -71,7 +71,7 @@ class Server:
 
             # addressing all the queries posed by a client to which we connected
             while rcvd:
-                # Loop to receive client messages
+                # receive client messages
                 rcvd = Server.receive(client_socket, 1024)
                 print("RECEIVED:", rcvd)
 
@@ -97,21 +97,14 @@ class Server:
                     #rec = rec.strip("bitarray('')")
                     print(rec)
                     newRecord = Clustering.Row(rec)
-                    self.database1.append(newRecord)
-                    """            
-                    newCluster = Cluster()
-                    newCluster.addOneRowToCluster(newRecord)
-                    self.clusters.addClusterStaticly(newCluster)
-                    #self.database1.append(Row(splitRcvd[2]))
-                    """
+                    self.database1.append(newRecord)                    
                     Server.clientSend(client_socket,"ACK")
                     # Close the connection with the client
 
                 if rcvd.startswith("DYNAMIC INSERT"):
                     # Receive encoding
                     splitRcvd = rcvd.split(" ")
-                    rec = splitRcvd[2]
-                    #rec = rec.strip("bitarray('')")
+                    rec = splitRcvd[2]                    
                     print(rec)
                     newRecord = Clustering.Row(rec)
                     self.clusterlist.addRowDynamicNaive(newRecord)
@@ -119,8 +112,8 @@ class Server:
                 if rcvd.startswith("DYNAMIC UPDATE"):
                     pass
 
-                #if rcvd.startswith("DYNAMIC DELETE"):
-                #    pass
+                if rcvd.startswith("DYNAMIC DELETE"):
+                    pass
 
                 if rcvd.startswith("LIST"):
                     for i in self.database1:
@@ -135,7 +128,7 @@ class client:
     # Each client is a data provider / unique dataset
     def __init__(self):
         self.clientId = 0
-        self.encodedRecords = []
+        self.encodedRecords = [] # Dictionary
         
 
 def main():

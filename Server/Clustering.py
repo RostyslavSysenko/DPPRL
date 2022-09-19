@@ -191,6 +191,7 @@ class Row:
     def __init__(self,encodedString):
         self.encodedRowString = encodedString
         self.rowListRepresentation = [int(char) for char in encodedString]
+        self 
 
     def __str__(self):
         return self.encodedRowString
