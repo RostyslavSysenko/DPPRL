@@ -6,14 +6,14 @@ from enum import Enum
 from bitarray import bitarray
 import socket
 
-
 class FieldType(Enum):
-    INT = 1
-    STR = 2
-
-
+    INT_ENCODED = 1
+    STR_ENCODED = 2
+    NOT_ENCODED = 3
+    RECORD_ID = 4
+    
 class FileEncoder:
-    def __init__(self, attributeTypesList, fileLocation):
+    def __init__(self, attributeTypesList, fileLocation,):
         self.attributeTypesList = attributeTypesList
         self.fileLocation = fileLocation
         self.bf = bf
@@ -62,70 +62,88 @@ class FileEncoder:
         for i in range(0, headRowNumber):
             print(self.encodings[i])
 
+    def sendEncodings(self):
+        
 
-# Bloom filter configuration settings
-# Extra functionality: Move to a separate configuration file
-bf_len = 50  # 50
-bf_num_hash_func = 2  # 2
-bf_num_inter = 5
-bf_step = 1
-max_abs_diff = 20
-min_val = 0
-max_val = 100
-q = 2
+        # Client encoding script
+        ipv4 = socket.AF_INET
+        tcp = socket.SOCK_STREAM
+        host = '127.0.0.1'
+        port = 43555
 
-bf = BF(bf_len, bf_num_hash_func, bf_num_inter, bf_step,
-        max_abs_diff, min_val, max_val, q)
+        s = socket.socket(ipv4, tcp)
+        print("Client socket successfully created")
 
-# Client encoding script
-ipv4 = socket.AF_INET
-tcp = socket.SOCK_STREAM
-host = '127.0.0.1'
-port = 43555
+        # connecting to the server
+        s.connect((host, port))
+        print("the socket has successfully connected to server")
+        # receive data from the server and decode to get the string.
+        print(s.recv(1024).decode())
+        # Ask server to authenticate and assign a client ID.
 
-s = socket.socket(ipv4, tcp)
-print("Client socket successfully created")
-
-# connecting to the server
-s.connect((host, port))
-print("the socket has successfully connected to server")
-# receive data from the server and decode to get the string.
-print(s.recv(1024).decode())
-# Ask server to authenticate and assign a client ID.
-
-s.send('AUTH'.encode())
-rcvd = s.recv(1024).decode()
-id = rcvd
-
-print("Client ID is ", id)
-
-# File parameters
-attributeTypesList = [FieldType.INT, FieldType.STR, FieldType.STR, FieldType.STR, FieldType.INT] # Test this key with all string types.
-fileLocation = './datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv'
-
-# Encode the csv using bloom filters
-Encoder = FileEncoder(attributeTypesList, fileLocation)
-Encoder.encodeByAttribute()
-# Extra functionality: Offline mode, do this without connecting to server and output to csv
-print("Sample of encoded data:")
-Encoder.display(5)
-
-
-# Send the encodings for static linkage
-print("Sending encoded data")
-for r in Encoder.encodings:
-    cmd = "STATIC INSERT " + str(r)
-    s.send(cmd.encode())
-    AcknowledgedReceive = False
-    while True:
+        s.send('AUTH'.encode())
         rcvd = s.recv(1024).decode()
-        if rcvd.startswith("ACK"):
-            AcknowledgedReceive = True
-        if AcknowledgedReceive:
-            break
-    # Continue to next record once acknowledged
-#s.send('LIST'.encode())
+        id = rcvd
 
-# Quit
-s.send('QUIT'.encode())
-s.close()
+        print("Client ID is ", id)
+
+        
+
+        # Encode the csv using bloom filters
+        
+        Encoder.encodeByAttribute()
+        # Extra functionality: Offline mode, do this without connecting to server and output to csv
+        print("Sample of encoded data:")
+        Encoder.display(5)
+
+
+        # Send the encodings for static linkage
+        print("Sending encoded data")
+        for r in Encoder.encodings:
+            cmd = "STATIC INSERT " + str(r)
+            s.send(cmd.encode())
+            AcknowledgedReceive = False
+            while True:
+                rcvd = s.recv(1024).decode()
+                if rcvd.startswith("ACK"):
+                    AcknowledgedReceive = True
+                if AcknowledgedReceive:
+                    break
+            # Continue to next record once acknowledged
+        #s.send('LIST'.encode())
+
+        # Quit
+        s.send('QUIT'.encode())
+        s.close()
+
+
+
+
+def main():
+    # parameters
+    attributeTypesList = [FieldType.RECORD_ID, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.INT_ENCODED] # Test this key with all string types.
+    fileLocation = './datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv'
+    #
+
+    # Bloom filter configuration settings
+    # Extra functionality: Move to a separate configuration file ON SERVER
+    bf_len = 50  # 50
+    bf_num_hash_func = 2  # 2
+    bf_num_inter = 5
+    bf_step = 1
+    max_abs_diff = 20
+    min_val = 0
+    max_val = 100
+    q = 2
+
+    bf = BF(bf_len, bf_num_hash_func, bf_num_inter, bf_step,
+            max_abs_diff, min_val, max_val, q)
+
+    clientEncoder = FileEncoder(attributeTypesList, fileLocation)
+    clientEncoder.encodeByAttribute
+    
+   
+
+
+if __name__ == "__main__":
+    main()

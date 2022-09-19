@@ -3,6 +3,7 @@ from hungarian_algorithm import algorithm
 import random
 import numpy as np
 
+# input functions and classes
 def order(BF_list): 
     
     result = list(BF_list)
@@ -19,6 +20,45 @@ def sim(a, b):
     dice = round(dice, 3) 
     
     return dice  
+class graph:
+    
+    def __init__(self,gdict=None):
+        if gdict is None:
+            gdict = []
+        self.gdict = gdict
+        
+    def edges(self):
+        return self.findedges()
+# Get the keys of the dictionary
+
+    def getVertices(self):
+        return list(self.gdict.keys())
+    
+    def findedges(self):
+        edgename = []
+        for vrtx in self.gdict:
+            for nxtvrtx in self.gdict[vrtx]:
+                if (nxtvrtx, vrtx) not in edgename:
+                    edgename.append((vrtx, nxtvrtx))
+        return edgename
+    
+    def addVertex(self, vrtx):
+        if vrtx not in self.gdict:
+            self.gdict[vrtx] = []
+    
+    def pruneVertex(self, vrtx):
+        if vrtx in self.gdict:
+            del self.gdict[vrtx]
+            
+    # Add the new edge
+    def AddEdge(self, edge):
+        edge = set(edge)
+        (vrtx1, vrtx2) = edge
+        if vrtx1 in self.gdict:
+            self.gdict[vrtx1].append(vrtx2)
+        else:
+            self.gdict[vrtx1] = [vrtx2]
+            
 
 def staticLinkage(database1, database2, database3): 
     # input 
@@ -36,7 +76,7 @@ def staticLinkage(database1, database2, database3):
     # map --> one to one mapping algo
 
     # min_similarity_threshold (st) --> Minimum similarity threshold to classify record sets
-    min_similarity_threshold = 0.70
+    min_similarity_threshold = 0.65
     # min_subset_size (sm) --> Minimum subset size, with 2 ≤ 𝑠𝑚 ≤ 𝑝
     min_subset_size = 2
 
@@ -44,7 +84,8 @@ def staticLinkage(database1, database2, database3):
     # M - matching clusters
     #intialisation 
     clus_ID = 0
-    G = {}
+    graph_elements = {}
+    G = graph(graph_elements)
     M = []
 
     #order databases 
@@ -58,36 +99,42 @@ def staticLinkage(database1, database2, database3):
             for rec in DBs[i]: 
                 clus_ID += 1 
                 # add vertices
-                G[clus_ID] = [rec]
-        
+                G.addVertex(rec)
+                
+        G_ver = G.getVertices()
         # other parties 
         if i > 1:
             # iterate records 
             for rec in DBs[i]: 
-                # iterate vertices 
-                for c in G :
-                    # calculate similarity 
-                    sim_val = sim(int(rec),c)
+                # iterate vertices in G (first party)
+                for c in G_ver :
+                    # calculate similarity between first party records and other records
+                    sim_val = sim(int(rec),int(c))
                     if sim_val >= min_similarity_threshold:
-                        # add edges 
-                        G[c].append(rec)
+                        # add edges - does not match exactly
+                        G.AddEdge({c, rec})
                         # 1-to-1 mapping 
                         # return a list of matched vertices  
-            opt_E = algorithm.find_matching(G, matching_type = 'max', return_type = 'list')                  
+            
+            G_edge = G.edges()
+            opt_E = algorithm.find_matching(graph_elements, matching_type = 'max', return_type = 'list')                  
             
             # iterate edges
-            for edges in list(G):
-                if edges not in list(opt_E)[1]:
+            check_vals = [X[0] for X in opt_E]
+
+            for edges in list(G_edge):
+                if edges in check_vals:
+                    continue
+                else: 
                     # prune edges 
-                    G.pop(edges)
-            
+                    G.pruneVertex(edges)
                
     # Iterate final clusters
-    for c in G: 
+    for c in graph_elements: 
         # size at least sm
-        if abs(c) >= min_subset_size:
+        if int(c) >= min_subset_size:
             # Add to M 
-            M.add(c)
+            M.append(c)
 
     # output M - returns list of clusters
-    return ("Cluster list: ", M) 
+    return (" Cluster list: ", M) 
