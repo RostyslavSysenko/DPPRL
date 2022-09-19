@@ -1,5 +1,5 @@
 from Clustering import *
-from staticLinkage import staticLinkage 
+
 # -----------------TESTING------------------------
 
 # # TEST SET 1: some tests on mean vectors
@@ -113,7 +113,9 @@ from staticLinkage import staticLinkage
 
 # # # # All tests in TEST2 are behaving apropriately on current version of code
 
+ 
 
+## TEST SET 3 - incremental linkage
 ###### Initial incremental linkage tests 
 
 # a = ['11001', '11011', '11110']
@@ -121,3 +123,39 @@ from staticLinkage import staticLinkage
 # c = ['11011', '10001', '11110']
 
 # print(staticLinkage(a,b,c))
+
+
+
+
+# # TEST SET 4 - testing Row JSON parsing
+
+# communicatedStr1=  """
+# {
+#             "encodedAttributes" : 
+#                 {
+#                     "DOB" : "11",
+#                     "wealth" : "10"
+#                 },
+#             "nonEncodedAttributes" : 
+#                 {
+#                     "weight" : 
+#                         {
+#                             "value" : "67" ,
+#                             "type"  : "4"
+#                         },
+#                     "height" : 
+#                         {
+#                             "value" : "97" ,
+#                             "type"  : "3" 
+#                         }
+#                 },
+#             "rowId" : "1",
+#             "DBId" : "3"
+# }
+# """
+
+# row = Row.parseFromJson(communicatedStr1)
+
+# print(row)
+
+# # All tests in TEST4 are behaving apropriately on current version of code

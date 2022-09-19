@@ -1,6 +1,7 @@
 from array import *
 import statistics
 from sklearn.neighbors import NearestNeighbors
+import json
 
 class ClusterList:
     def __init__(self, cosineSimilarityThreshold = 0.9,clusterAggrFunction = "mean",indexingBitStart=None, indexingBitEnd = None ):
@@ -188,11 +189,67 @@ class Cluster:
 
 class Row:
     # non modifiable currently
-    def __init__(self,encodedString):
-        self.encodedRowString = encodedString
-        self.rowListRepresentation = [int(char) for char in encodedString]
-        self 
+    def __init__(self,encodedStr: str, nonEncodedAttrubuteDict =None, rowId = None, DbId = None):
+        self.encodedRowString = encodedStr
+        self.rowListRepresentation = [int(char) for char in encodedStr]
+        self.nonEncodedAttrubuteDict =nonEncodedAttrubuteDict
+        self.rowId =rowId
+        self.DbId=DbId
+    
+    def parseFromJson(jsonStr):
+        """
+        input: a string of type 
+
+        '
+        {
+
+            "encodedAttributes" : 
+                {
+                    "DOB" : "01000101010100111",
+                    "encName2" : ...
+                    ... 
+                    "encNamek" : ...
+                },
+            "nonEncodedAttributes" : 
+                {
+                    "weight" : 
+                        {
+                            "value" : "67" 
+                            "type"  : "4" #val is based on the Enum we defined
+                        },
+                    "attName2" : ...
+                    ...
+                    "attNamej" : ...
+                },
+            "rowId" : "q",
+            "DBId" : "z"
+
+        }
+        '
+        output: parsedRow Object
+        """
+
+        # parse jsonStr into dictionary object:
+        jsonObj = json.loads(jsonStr)
+
+        # creating encoded string
+        lstOfEncodings = list(jsonObj["encodedAttributes"].values())
+        encodedStr =   ''.join(lstOfEncodings) #concat all encodings in a list
+
+        # creating a row from python dictionary:
+        row = Row(
+                DbId= jsonObj["DBId"],
+                rowId = jsonObj["rowId"],
+                encodedStr = encodedStr,
+                nonEncodedAttrubuteDict= jsonObj["nonEncodedAttributes"]
+                )
+        return row
 
     def __str__(self):
-        return self.encodedRowString
+        sep = "---Row---" + "\n"
+        idStr = "id: " + self.rowId + "\n"
+        dbStr = "db: " + self.DbId + "\n"
+        encStr = "enc Attrs: " + self.encodedRowString + "\n"
+        nonEncStr = "nonEnc Attrs: " + str(self.nonEncodedAttrubuteDict) + "\n"
+        return sep + idStr + dbStr + encStr + nonEncStr
 
