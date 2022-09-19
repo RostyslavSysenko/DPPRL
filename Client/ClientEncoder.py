@@ -116,9 +116,6 @@ print("Sending encoded data")
 for r in Encoder.encodings:
     cmd = "STATIC INSERT " + str(r)
     s.send(cmd.encode())
-<<<<<<< HEAD
-
-=======
     AcknowledgedReceive = False
     while True:
         rcvd = s.recv(1024).decode()
@@ -128,7 +125,6 @@ for r in Encoder.encodings:
             break
     # Continue to next record once acknowledged
 #s.send('LIST'.encode())
->>>>>>> 0b6f9e29805f733ac6caebe4af866ce2f1666d17
 
 # Quit
 s.send('QUIT'.encode())
