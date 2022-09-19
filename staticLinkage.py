@@ -1,20 +1,15 @@
-
 # input 
+import IncrementalClusteringInput
 # D --> Party 𝑃𝑖’s BFs along with their BKVs, 1 ≤ 𝑖 ≤ 𝑝
-DBs = []
-
-num_of_parties = 3
-
-# B --> Blocks containing the union of blocks from all parties -> implement later
-
+# B --> Blocks containing the union of blocks from all parties
 # sim --> Similarity function
 
 # ord --> Ordering function for incremental processing of databases : 
 
 # map --> one to one mapping algo
 
-# min_similarity_threshold (st) --> Minimum similarity threshold to classify record sets
-min_similarity_threshold = 0.75
+# min_similarirt_threshold (st) --> Minimum similarity threshold to classify record sets
+min_similarirt_threshold = 0.75
 # min_subset_size (sm) --> Minimum subset size, with 2 ≤ 𝑠𝑚 ≤ 𝑝
 min_subset_size = 2
 
@@ -27,14 +22,14 @@ G = {}
 M = {} 
 
 #order databases 
-DBs = order()
+DBs = ord([])
 
 #iterate blocks 
 for i in range(): 
     #graph for block B 
     G[i] = {} 
     # iterate parties
-    for i in range(num_of_parties): 
+    for i in range(): 
         #first party 
         if i == 1:
         # iterate records 
@@ -82,4 +77,3 @@ for c :
 return M 
 
 # return in data structure
-

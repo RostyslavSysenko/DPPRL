@@ -104,8 +104,6 @@ for r in Encoder.encodings:
     cmd = "INSERT ", r
     s.send(cmd.encode())
 
-serializedEncodings = pickle.dumps(Encoder.encoding) # Serialization
-s.send(serializedEncodings)
 
 # Quit
 s.send('QUIT'.encode())
