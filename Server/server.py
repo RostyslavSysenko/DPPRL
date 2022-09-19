@@ -1,6 +1,7 @@
 import socket
 import pickle
 import Clustering
+import metrics
 
 """"
 bit per attribute
@@ -23,12 +24,60 @@ Attributes that we want to pass
 4. row id in a particular database
 5. database/dataset id
 6. dictionary of unencoded attributes
-"""
+""" 
+class client:
+    # Each client is a data provider / unique dataset
+    def __init__(self, id, server):                
+        self.clientId = 0
+        self.socket = None
+        self.address = None
+        self.connectedServer = server
+        self.encodedRecords = [] # Dictionary instead
+
+    def interpretMessage(self, rcvd):
+        if rcvd.startswith("STATIC INSERT"):
+            # Receive encoding
+            splitRcvd = rcvd.split(" ")
+            rec = splitRcvd[2]
+            #rec = rec.strip("bitarray('')")
+            print(rec)
+            newRecord = Clustering.Row(rec)
+            self.database1.append(newRecord)                    
+            Server.clientSend(self.socket,"ACK")
+            # Close the connection with the client
+
+        if rcvd.startswith("DYNAMIC INSERT"):
+            # Receive encoding
+            splitRcvd = rcvd.split(" ")
+            rec = splitRcvd[2]                    
+            print(rec)
+            newRecord = Clustering.Row(rec)
+            self.clusterlist.addRowDynamicNaive(newRecord)
+
+        if rcvd.startswith("DYNAMIC UPDATE"):
+            pass
+
+        if rcvd.startswith("DYNAMIC DELETE"):
+            pass
+
+        if rcvd.startswith("LIST"):
+            for i in self.database1:
+                print(i)
+        
+        if rcvd == 'QUIT':
+            self.socket.close()
+            # remove the client
+            self.connectedServer
+
 
 class Server:
-    def __init__(self):
+    def __init__(self, maxConnections):
+        self.run = False
+        self.maxConnections = maxConnections
+        self.assignedIds = []
+        self.connectedClients = []
         self.clusterlist = Clustering.ClusterList()
-        self.database1 = [] # List of all bloom filters from first database.
+        self.firstdatabase = [] # List of all bloom filters from first database.
 
     def setUpSocketOnCurrentMachine(self):
         host = ''
@@ -51,92 +100,65 @@ class Server:
         encoded = message.encode()
         c.send(encoded)
 
-    def receive(connection):
-        rMessage = connection.recv(1024)
+    def receives(self):
+        rMessage = self.connection.recv(1024)
         return rMessage.decode()
 
-    def receive(c, buffer):
+    def receive(self, c, buffer):
         rMessage = c.recv(buffer)
         return rMessage.decode()
 
     def launchServer(self, server_socket):
         # a forever loop until we interrupt it or an error occurs
-        while True:
-            # Establish connection with client.
+        self.run = True
+        while Run:
+            # Establish connection with a client.
             client_socket, client_addr = server_socket.accept()
             print('Got connection from', client_addr)
+            self.connectedClients.append(client_socket)
 
             # Notify client of successful connection
             Server.clientSend(client_socket, 'Connection successful')
 
-            # addressing all the queries posed by a client to which we connected
-            while rcvd:
-                # receive client messages
-                rcvd = Server.receive(client_socket, 1024)
-                print("RECEIVED:", rcvd)
+            if rcvd == 'AUTH':
+                id = self.assignId()                
+                Server.clientSend(client_socket, id)  # Tell the client their identifier
 
-                # Authenticate new client (example function)
-                if rcvd == 'AUTH':
-                    # connection handling for multiple clients
-                    assignedIds = []
-                    lowestId = 1
-                    # Find the lowest ID
-                    for i in assignedIds:
-                        if i < lowestId:
-                            lowestId = i
-                    assignedIds.append(lowestId)
-                    Server.clientSend(client_socket, lowestId)  # Tell the client to use id = 1
+                # Send bloom filter settings to the new connection
 
-                    # Send bloom filter settings                  
-                    
+            # Receive messages from connectedClients
+            for client in self.connectedClients:
+                rcvd = Server.receive(client, 1024)
+                if rcvd:
+                    print("RECEIVED:", rcvd)
+                    client.interpretMessage(rcvd)
+                
 
-                if rcvd.startswith("STATIC INSERT"):
-                    # Receive encoding
-                    splitRcvd = rcvd.split(" ")
-                    rec = splitRcvd[2]
-                    #rec = rec.strip("bitarray('')")
-                    print(rec)
-                    newRecord = Clustering.Row(rec)
-                    self.database1.append(newRecord)                    
-                    Server.clientSend(client_socket,"ACK")
-                    # Close the connection with the client
-
-                if rcvd.startswith("DYNAMIC INSERT"):
-                    # Receive encoding
-                    splitRcvd = rcvd.split(" ")
-                    rec = splitRcvd[2]                    
-                    print(rec)
-                    newRecord = Clustering.Row(rec)
-                    self.clusterlist.addRowDynamicNaive(newRecord)
-
-                if rcvd.startswith("DYNAMIC UPDATE"):
-                    pass
-
-                if rcvd.startswith("DYNAMIC DELETE"):
-                    pass
-
-                if rcvd.startswith("LIST"):
-                    for i in self.database1:
-                        print(i)
-
-                if rcvd == 'QUIT':
-                    client_socket.close()
-                    # Breaking the loop once connection is closed
-                    break
-
-class client:
-    # Each client is a data provider / unique dataset
-    def __init__(self):
-        self.clientId = 0
-        self.encodedRecords = [] # Dictionary
+            metrics.display()
+            # End of run loop                       
+                
+                
+    def assignId(self):
+        # connection handling for multiple clients                
+        allIds = range(1,self.maxConnections)
+        availableIds = []
+        id = 1
+        # Find the lowest available ID
+        for currentId in allIds:      
+            lowestId = i            
+        self.assignedIds.append(id)
         
 
 def main():
-    server = Server()
+    # Program parameter: maxConnections (default of 5)
+    # Program parameter: port
+
+    server = Server(5)
     server_socket = server.setUpSocketOnCurrentMachine()
     server.launchServer(server_socket)
 
 
 if __name__ == "__main__":
     main()
+
 
