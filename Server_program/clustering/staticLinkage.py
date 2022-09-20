@@ -20,8 +20,8 @@ def sim(a, b):
     dice = round(dice, 3) 
     
     return dice  
-class graph:
     
+class graph:    
     def __init__(self,gdict=None):
         if gdict is None:
             gdict = []

@@ -368,7 +368,8 @@ q = 2
 bf = BF(bf_len, bf_num_hash_func, bf_num_inter, bf_step,
           max_abs_diff, min_val, max_val, q)
 
-
+'''
+# Example code
 #numerical - integer
 val1 = 29
 val2 = 30
@@ -430,7 +431,7 @@ bf1 = bf.set_to_bloom_filter(val1_set)
 bf2 = bf.set_to_bloom_filter(val2_set)
 bf_sim = bf.calc_bf_sim(bf1,bf2)
 #print(val1,val2,true_sim, bf_sim)
-
+'''
 
 
 

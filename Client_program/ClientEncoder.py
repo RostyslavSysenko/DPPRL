@@ -13,13 +13,23 @@ class FieldType(Enum):
     NOT_ENCODED = 3
     
 class FileEncoder:
-    def __init__(self, attributeTypesList, fileLocation, host, port):
+    def __init__(self, attributeTypesList, fileLocation):
         self.attributeTypesList = attributeTypesList
         self.fileLocation = fileLocation
+        
         self.host = "127.0.0.1"
         self.port = 43555
-        self.bf = bf
+        self.soc = None
+        self.bf = None
         self.encodings = None
+
+    def send(self, message):
+        encoded = message.encode()
+        self.soc.send(encoded)
+
+    def receives(self):
+        rMessage = self.soc.recv(1024)
+        return rMessage.decode()        
 
     def connectToServer(self, host, port):
         # Server connection
@@ -29,18 +39,18 @@ class FileEncoder:
         self.port = port
         
 
-        s = socket.socket(ipv4, tcp)
+        self.soc = socket.socket(ipv4, tcp)
         print("Client socket successfully created")
 
         # connecting to the server
-        s.connect((host, port))
+        self.soc.connect((host, port))
         print("the socket has successfully connected to server")
         # receive data from the server and decode to get the string.
-        print(s.recv(1024).decode())
+        print(self.soc.recv(1024).decode())
         # Ask server to authenticate and assign a client ID.
 
-        s.send('AUTH'.encode())
-        rcvd = s.recv(1024).decode()
+        self.soc.send('AUTH'.encode())
+        rcvd = self.soc.recv(1024).decode()
         id = rcvd
         print("Client ID is ", id)
 
@@ -88,7 +98,7 @@ class FileEncoder:
 
     def saveEncodings(self):
         # save self.encodings (list of encoded records stored as strings)
-        outputFile = "Enc_" + self.fileLocation
+        outputFile = "Encoded_" + self.fileLocation
         with open(outputFile, "wb") as output:
             pickle.dump(self.encodings, output)
         
@@ -98,19 +108,15 @@ class FileEncoder:
         with open(outputFile, "wb") as output:
             pickle.dump(self.encodings, output)
 
-    def sendEncodingsStatic(self):         
-        # Extra functionality: Offline mode, do this without connecting to server and output to csv
-        print("Sample of encoded data:")
-        self.display(5)
-
+    def sendEncodingsStatic(self):   
         # Send the encodings for static linkage
         print("Sending encoded data")
         for r in self.encodings:
             cmd = self.id + " STATIC INSERT " + str(r)
-            s.send(cmd.encode())
+            self.soc.send(cmd.encode())
             AcknowledgedReceive = False
             while True:
-                rcvd = s.recv(1024).decode()
+                rcvd = self.soc.recv(1024).decode()
                 if rcvd.startswith("ACK"):
                     AcknowledgedReceive = True
                 if AcknowledgedReceive:
@@ -118,36 +124,25 @@ class FileEncoder:
             # Continue to next record once acknowledged
         #s.send('LIST'.encode())      
 
-    
+    def continuousDynamicLinkage():
+        # While True
+            # Read CSV
+            # Detect changes
+            # If there are changes update the linkage unit
+        pass
 
 
 
 def main():
-    # parameters    
-    attributeTypesList = [FieldType.RECORD_ID, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.INT_ENCODED] # Test this key with all string types.
-    fileLocation = './datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv'
-    # Program parameter: Dynamic or static parameter
-
-    def parameter (attributeTypesList,clientEncoder):
-
-    if attributeTypesList > clientEncoder:
-        return attributeTypesList
-
-    else
-
-    return clientEncoder:
-
-
-
-    
-
-
-
+    # Argument defaults / initialisation
+    attributeTypesList = [FieldType.NOT_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.INT_ENCODED] # Test this key with all string types.
+    fileLocation = './Client_program/datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv'
+    dynamicLinkage = False 
     # Extra functionality program parameter: -s (save encodings), output encodings to csv
-
+    saveOption = True 
 
     # Bloom filter configuration settings
-    # Extra functionality: Move to a separate configuration file ON SERVER to be received during AUTH request
+    # To Do: Move to a separate configuration file ON SERVER to be received during AUTH request
     bf_len = 50  # 50
     bf_num_hash_func = 2  # 2
     bf_num_inter = 5
@@ -160,26 +155,30 @@ def main():
     bf = BF(bf_len, bf_num_hash_func, bf_num_inter, bf_step,
             max_abs_diff, min_val, max_val, q)
     
-    clientEncoder = FileEncoder(attributeTypesList, fileLocation)
-    clientEncoder.connectToServer('127.0.0.1', 43555)
+    clientEncoder = FileEncoder(attributeTypesList, fileLocation)    
     clientEncoder.encodeByAttribute(bf)
-
     # If -s "File to output"    
     #clientEncoder.saveEncoding("Filename")
-    # Else if -s
-    clientEncoder.saveEncodings()
+    # Temporary conditionals for testing
+    if saveOption:
+        clientEncoder.saveEncodings()
+    else:
+        # Diplay the first 5 encodings and then attempt to connect to the server
+        print("Sample of encoded data:")
+        clientEncoder.display(5)    
+        clientEncoder.connectToServer('127.0.0.1', 43555)    
 
+        # If static    
+        clientEncoder.sendEncodingsStatic()
+        # Disconnect after sending encodings to the server
+        clientEncoder.soc.send('QUIT'.encode())
     
+    if dynamicLinkage:
+        clientEncoder.continuousDynamicLinkage()
+    # Stays running, reading the csv file for updates
 
-    # If no -t
-    clientEncoder.sendEncodingsStatic()
-    # Disconnect after sending encodings to the server
-    s.send('QUIT'.encode())
-    s.close()
-
-
-    # If -t
-    clientEncoder.continuousDynamicLinkage()
+    # Close the socket and program.
+    clientEncoder.soc.close()
     
 if __name__ == "__main__":
     main()

@@ -1,11 +1,9 @@
 import socket
 import pickle
-import Clustering
 import metrics
+import Clustering
 
 """"
-bit per attribute
-
  -> if static
 	-> pass list of rows like ["010010","01100101"] for each dataset
   -> "static"
@@ -27,7 +25,7 @@ Attributes that we want to pass
 """ 
 class client:
     # Each client is a data provider / unique dataset
-    def __init__(self, id, server):                
+    def __init__(self, id, socket, address, server):                
         self.clientId = 0
         self.socket = None
         self.address = None
@@ -35,6 +33,7 @@ class client:
         self.encodedRecords = [] # Dictionary instead
 
     def interpretMessage(self, rcvd):
+        assert type(rcvd) == str
         if rcvd.startswith("STATIC INSERT"):
             # Receive encoding
             splitRcvd = rcvd.split(" ")
@@ -43,8 +42,7 @@ class client:
             print(rec)
             newRecord = Clustering.Row(rec)
             self.database1.append(newRecord)                    
-            Server.clientSend(self.socket,"ACK")
-            # Close the connection with the client
+            Server.clientSend(self.socket,"ACK")            
 
         if rcvd.startswith("DYNAMIC INSERT"):
             # Receive encoding
@@ -68,6 +66,11 @@ class client:
             self.socket.close()
             # remove the client
             self.connectedServer
+        
+    def encodedDictionary(self):
+        recordDict = {}
+
+        return recordDict     
 
 
 class Server:
@@ -111,12 +114,10 @@ class Server:
     def launchServer(self, server_socket):
         # a forever loop until we interrupt it or an error occurs
         self.run = True
-        while Run:
+        while self.run:
             # Establish connection with a client.
             client_socket, client_addr = server_socket.accept()
             print('Got connection from', client_addr)
-            self.connectedClients.append(client_socket)
-
             # Notify client of successful connection
             Server.clientSend(client_socket, 'Connection successful')
 
@@ -124,11 +125,17 @@ class Server:
                 id = self.assignId()                
                 Server.clientSend(client_socket, id)  # Tell the client their identifier
 
-                # Send bloom filter settings to the new connection
+                # Create new client object
+                newClient = client(self)
+
+                self.connectedClients.append(client_socket)
+
+                # Send bloom filter settings here instead of hard coding them.
+                # Server.clientSend(client_socket, BF_CONFIG)
 
             # Receive messages from connectedClients
-            for client in self.connectedClients:
-                rcvd = Server.receive(client, 1024)
+            for clients in self.connectedClients:
+                rcvd = Server.receive(clients.socket, 1024)
                 if rcvd:
                     print("RECEIVED:", rcvd)
                     client.interpretMessage(rcvd)
