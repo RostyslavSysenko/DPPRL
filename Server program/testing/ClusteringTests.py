@@ -1,5 +1,3 @@
-from Clustering import *
-
 # -----------------TESTING------------------------
 
 # # TEST SET 1: some tests on mean vectors
