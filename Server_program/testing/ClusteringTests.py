@@ -1,57 +1,66 @@
+import os, sys
+parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(parentdir)
+from data_structures.Utilities import *
+from data_structures.ClusterList import *
+
 # -----------------TESTING------------------------
 
-# # TEST SET 1: some tests on mean vectors
+# TEST SET 1: some tests on mean vectors
 
-# # TEST SET 1.1: cluster class and static insertion, mean vector aggr
-# cList = ClusterList()
+# TEST SET 1.1: cluster class and static insertion, mean vector aggr (passed on 20 sep and before)
+cList = ClusterList()
 
-# c0 = Cluster() # the true bit string is 1101
-# c0.addOneRowToCluster(Row("1101")) 
-# c0.addOneRowToCluster(Row("1100"))
-# c0.addOneRowToCluster(Row("1101"))
-# c0.addOneRowToCluster(Row("1101"))
+nonEncodedDict = dict()
+nonEncodedDict["name"] = "John"
 
-# print(c0)
+c0 = Cluster() # the true bit string is 1101
+c0.addOneRowToCluster(Row(encodedStr="1101",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1)) 
+c0.addOneRowToCluster(Row("1100",nonEncodedAttrubuteDict=nonEncodedDict,rowId=2,DbId=1))
+c0.addOneRowToCluster(Row("1101",nonEncodedAttrubuteDict=nonEncodedDict,rowId=3,DbId=1))
+c0.addOneRowToCluster(Row("1101",nonEncodedAttrubuteDict=nonEncodedDict,rowId=4,DbId=1))
 
-# c1 = Cluster() # the true bit string is 1111
-# c1.addOneRowToCluster(Row("1111"))
-# c1.addOneRowToCluster(Row("1111"))
-# c1.addOneRowToCluster(Row("1101"))
-# c1.addOneRowToCluster(Row("1111"))
+print(c0)
 
-# print(c1)
+c1 = Cluster() # the true bit string is 1111
+c1.addOneRowToCluster(Row("1111",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=2))
+c1.addOneRowToCluster(Row("1111",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=3))
+c1.addOneRowToCluster(Row("1101",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=4))
+c1.addOneRowToCluster(Row("1111",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=5))
 
-# c2 = Cluster() # the true bit string is 0011
-# c2.addOneRowToCluster(Row("0011"))
-# c2.addOneRowToCluster(Row("0011"))
-# c2.addOneRowToCluster(Row("0011"))
-# c2.addOneRowToCluster(Row("0011"))
+print(c1)
 
-# cList.addClusterStaticly(c0)
+c2 = Cluster() # the true bit string is 0011
+c2.addOneRowToCluster(Row("0011",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1))
+c2.addOneRowToCluster(Row("0011",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1))
+c2.addOneRowToCluster(Row("0011",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1))
+c2.addOneRowToCluster(Row("0011",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1))
 
-# print(cList)
+cList.addClusterStaticly(c0)
 
-# cList.addClusterStaticly(c1)
+print(cList)
 
-# print(cList)
+cList.addClusterStaticly(c1)
 
-# cList.addClusterStaticly(c2)
+print(cList)
 
-# print(cList)
+cList.addClusterStaticly(c2)
 
-# # TEST SET 1.2: cluster class and dynamic insertion, mean vector aggr
+print(cList)
 
-# rowForDynamicInsertion = Row("1111")
-# cList.addRowDynamicNaive(rowForDynamicInsertion)
+#TEST SET 1.2: cluster class and dynamic insertion, mean vector aggr
 
-# print(cList)
+rowForDynamicInsertion = Row("1111")
+cList.addRowDynamic(rowForDynamicInsertion)
 
-# rowForDynamicInsertion = Row("0011")
-# cList.addRowDynamicNaive(rowForDynamicInsertion)
+print(cList)
 
-# print(cList)
+rowForDynamicInsertion = Row("0011")
+cList.addRowDynamic(rowForDynamicInsertion)
 
-# # All tests in TEST1 are behaving apropriately on current version of code
+print(cList)
+
+# All tests in TEST1 are behaving apropriately on current version of code (pushed on 20 sep 6:07pm)
 
 
 

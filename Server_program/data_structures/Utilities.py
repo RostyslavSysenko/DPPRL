@@ -73,9 +73,9 @@ class Row:
 
     def __str__(self):
         sep = "---Row---" + "\n"
-        idStr = "id: " + self.rowId + "\n"
-        dbStr = "db: " + self.DbId + "\n"
-        encStr = "enc Attrs: " + self.encodedRowString + "\n"
+        idStr = "id: " + str(self.rowId) + "\n"
+        dbStr = "db: " + str(self.DbId) + "\n"
+        encStr = "enc Attrs: " + str(self.encodedRowString) + "\n"
         nonEncStr = "nonEnc Attrs: " + str(self.nonEncodedAttrubuteDict) + "\n"
         return sep + idStr + dbStr + encStr + nonEncStr
 
@@ -96,7 +96,7 @@ class Cluster:
 
     def __getAggrFunction(self):
         if (self.__clusterDoesntBelongToClustList()):
-            return AggrFunct.mean # this is default when we create cluster without them belonging to cluster list. This is used for testing
+            return AggrFunct.MEAN # this is default when we create cluster without them belonging to cluster list. This is used for testing
         else:
             return self.__parentClusterListObj.clusterAggrFunction
 
@@ -163,9 +163,9 @@ class Cluster:
         self.__handleAggregation()
 
     def __handleAggregation(self):
-        if (self.__getAggrFunction() == AggrFunct.mean):
+        if (self.__getAggrFunction() == AggrFunct.MEAN):
             self.__setClusterAggrToMeanVector()
-        elif (self.__getAggrFunction() == AggrFunct.median):
+        elif (self.__getAggrFunction() == AggrFunct.MEDIAN):
             self.__setClusterAggrToMedianVector()
         else:
             assert False, "invalid aggregation function reached: '" + self.__getAggrFunction() + "'"
