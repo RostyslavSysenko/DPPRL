@@ -1,0 +1,3 @@
+python "ClientEncoder.py"
+
+PAUSE

@@ -20,6 +20,7 @@ class FileEncoder:
         self.host = "127.0.0.1"
         self.port = 43555
         self.soc = None
+        self.id = 0
         self.bf = None
         self.encodings = None
 
@@ -46,13 +47,13 @@ class FileEncoder:
         self.soc.connect((host, port))
         print("the socket has successfully connected to server")
         # receive data from the server and decode to get the string.
-        print(self.soc.recv(1024).decode())
+        print(self.receives())
         # Ask server to authenticate and assign a client ID.
 
-        self.soc.send('AUTH'.encode())
-        rcvd = self.soc.recv(1024).decode()
-        id = rcvd
-        print("Client ID is ", id)
+        self.send('AUTH')
+        rcvd = self.receives()
+        self.id = rcvd
+        print("Client ID is ", self.id)
 
     
     def encodeByAttribute(self, bf):
@@ -83,7 +84,7 @@ class FileEncoder:
             # Delimit encoded attributes with a comma into a single string
             for i in encodedAttributesOfRow:
                 encodedAttr = i.strip("bitarray('')")
-                print(encodedAttr)
+                # print(encodedAttr) # Debugging
                 encodedRecord += encodedAttr + ","
 
             # add the encoded string of the row to the list of all encoded rows
@@ -96,13 +97,13 @@ class FileEncoder:
         for i in range(0, headRowNumber):
             print(self.encodings[i])
 
-    def saveEncodings(self):
+    def saveEncodings(self): # NOT WORKING
         # save self.encodings (list of encoded records stored as strings)
-        outputFile = "Encoded_" + self.fileLocation
+        outputFile = "Encoded_bloomfilters.csv"
         with open(outputFile, "wb") as output:
             pickle.dump(self.encodings, output)
         
-    def saveEncoding(self, output):
+    def saveEncoding(self, output): # NOT WORKING
         # save self.encodings (list of encoded records stored as strings)
         outputFile = output
         with open(outputFile, "wb") as output:
@@ -136,10 +137,10 @@ class FileEncoder:
 def main():
     # Argument defaults / initialisation
     attributeTypesList = [FieldType.NOT_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.INT_ENCODED] # Test this key with all string types.
-    fileLocation = './Client_program/datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv'
+    fileLocation = '../Client_program/datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv'
     dynamicLinkage = False 
     # Extra functionality program parameter: -s (save encodings), output encodings to csv
-    saveOption = True 
+    saveOption = False 
 
     # Bloom filter configuration settings
     # To Do: Move to a separate configuration file ON SERVER to be received during AUTH request
@@ -165,7 +166,7 @@ def main():
     else:
         # Diplay the first 5 encodings and then attempt to connect to the server
         print("Sample of encoded data:")
-        clientEncoder.display(5)    
+        clientEncoder.display(5)
         clientEncoder.connectToServer('127.0.0.1', 43555)    
 
         # If static    
