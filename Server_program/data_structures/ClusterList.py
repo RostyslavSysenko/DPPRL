@@ -3,7 +3,7 @@ import os, sys
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.Utilities import *
-from data_structures.Indixer import *
+from data_structures.Indexer import *
 from clustering.DynamicClustering import *
 
 class ClusterList:

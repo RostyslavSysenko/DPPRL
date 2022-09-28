@@ -1,3 +1,3 @@
-python "ClientEncoder.py"
+python "ClientEncoder.py "
 
 PAUSE

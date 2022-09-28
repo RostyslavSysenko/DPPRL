@@ -1,14 +1,10 @@
-from ast import And
-from pydoc import cli
-import sys
-#sys.path.append('...')
-sys.path.append('..')
-#sys.path.insert(0, '..')
-#from Server_program.centralDataStructure.ClusterList import ClusterList
-#from Server_program.data_structures.ClusterList import *
-#from Server_program import centralDataStructure
-from centralDataStructure import Utilities
 import socket
+from centralDataStructure import Utilities
+from clustering import staticLinkage
+#from clustering import IncrementalClusterInput
+#from clustering import DynamicClustering
+#from centralDataStructure import ClusterList
+
 
 
 
@@ -41,7 +37,8 @@ class client:
             print(rec)
             newRecord = Utilities.Row(rec)
             self.encodedRecords.append(newRecord)                    
-            Server.clientSend(self.socket,"ACK")            
+            Server.clientSend(self.socket,"ACK")
+                                  
 
         if rcvd.startswith("DYNAMIC INSERT"):
             # Receive encoding
@@ -65,11 +62,24 @@ class client:
             # Print info about client.
             print(self.clientId + " ")
             print(self.address + " ")
+
+        if rcvd.startswith("STATIC LINK"):
+            # To do: Controller client on server side that sends this command?
+            print("Performing static linkage")
+            self.connectedServer.doStaticLinkage()
+
+        # if rcvd.startswith("")
+        # More commands to be entered here        
         
         if rcvd == 'QUIT':
             self.socket.close()
             # remove the client
             self.connectedServer
+
+        # Continue receiving messages from that client until no more messages.
+        rcvd = self.connectedServer.receives(self.socket)
+        if rcvd != None:
+            self.interpretMessage(rcvd)
         
     def encodedDictionary(self):
         recordDict = {}
@@ -82,8 +92,8 @@ class Server:
         self.run = False
         self.maxConnections = maxConnections
         self.connectedClients = []
-        #self.clusterlist = Clustering.ClusterList()
-        self.firstdatabase = [] # List of all bloom filters from first database.
+        #self.clusterlist = Utilities.ClusterList()
+        #self.firstdatabase = [] # List of all bloom filters from first database.
 
     def setUpSocketOnCurrentMachine(self, port):
         host = ''
@@ -127,9 +137,11 @@ class Server:
 
             # Client should attempt to authorise            
             rcvd = Server.receive(client_socket, 1024)
-
+            getNewMsg = False
             if rcvd == 'AUTH':
-                id = self.assignId()                
+                getNewMsg = True
+                id = self.assignId()
+                print("New connection assigned the clientId: ", id)                
                 Server.clientSend(client_socket, id)  # Tell the client their identifier
 
                 # Create new client object
@@ -139,39 +151,72 @@ class Server:
 
                 # Send bloom filter settings here instead of hard coding them.
                 # Server.clientSend(client_socket, BF_CONFIG)
-                break
+                break           
             
 
             # Receive messages from connectedClients
             for clients in self.connectedClients:
-                rcvd = Server.receive(clients.socket, 1024)
-                if rcvd:
+                if getNewMsg == True:                
+                    rcvd = Server.receive(clients.socket, 1024)                
+                if rcvd != None:                    
                     print("RECEIVED:", rcvd)
                     client.interpretMessage(rcvd)
-                
+                    getNewMsg = True
 
-            #metrics.display()
+
+            # Other checks, when should linkage be done?
+            # If self.dynamicUpdateNeeded == True 
+            # self.doDynamicLinkage
+
+            # metrics.display()
             # End of run loop                       
                 
                 
     def assignId(self):
         # connection handling for multiple clients  
-        # find currently assigned IDs
+        # Find currently assigned IDs
         possibleIds = range(1,self.maxConnections)
-        currentAssigned = []
-        for client in self.connectedClients:
-            currentAssigned.append(client.clientId)
+        currentlyAssigned = []
+        for clients in self.connectedClients:
+            currentlyAssigned.append(clients.clientId)
         
         # Find lowest available
         lowestAvailable = self.maxConnections
         for id in possibleIds:
             used = False
-            for i in currentAssigned:
+            for i in currentlyAssigned:
                 if id == i:
+                    print("Possible id: ", id, " equal to assigned id: ", i) # Debugging
                     used = True
             if not used & id < lowestAvailable:
                 lowestAvailable = id
         return lowestAvailable
+
+        def doStaticLinkage(self):
+            # Perform hungarian algorithm on 3 inputs for starting point
+            # Default input is any/first 3 clients (temporary)
+            # Input should be all clients who have statically inserted.
+            foundDb = 0
+            for clients in self.connectedClients:
+                assert clients.encodedRecords != None
+                if foundDb == 0:
+                    db1 = clients.encodedRecords
+                    foundDb += 1
+                if foundDb == 1:
+                    db2 = clients.encodedRecords
+                    foundDb += 1
+                if foundDb == 2:
+                    db3 = clients.encodedRecords
+                    
+                
+
+            # Static linkage with 3 databases
+            staticLinkage(db1, db2, db3)
+            pass
+
+        def doDynamicLinkage(self):
+            # Update clusters
+            pass
 
 
                 
