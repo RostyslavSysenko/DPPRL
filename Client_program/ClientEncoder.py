@@ -44,7 +44,7 @@ class FileEncoder:
         print("Client socket successfully created")
 
         # connecting to the server
-        self.soc.connect((host, port))
+        self.soc.connect((self.host, self.port))
         print("the socket has successfully connected to server")
         # receive data from the server and decode to get the string.
         print(self.receives())
@@ -126,11 +126,14 @@ class FileEncoder:
             cmd = "STATIC INSERT " + str(r)
             self.soc.send(cmd.encode())
             # Wait until server acknowledges record recieved.
+            """
             AcknowledgedReceive = False
             while not AcknowledgedReceive:                
                 rcvd = self.receives()
                 if rcvd.startswith("ACK"):
                     AcknowledgedReceive = True
+            """
+            
                 
             # Continue to next record once acknowledged
         #s.send('LIST'.encode())      
@@ -156,6 +159,9 @@ class FileEncoder:
                 # If no - at the start set it to the file location
                 # To Do: handle last host/port argument (if needed?)
                 self.fileLocation = i
+        # Work backwards from the last index. 
+        # Last arg is host:port 
+        # Second last arg is /File/Location/
 '''
     
 
@@ -165,6 +171,9 @@ def main():
     # Argument defaults / initialisation
     attributeTypesList = [FieldType.NOT_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.INT_ENCODED] # Test this key with all string types.
     fileLocation = '../Client_program/datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv'
+    # -l tells the server to statically link
+    staticLink = True
+    # -d tells the server to dynamically link
     dynamicLinkage = False 
     # Extra functionality program parameter: -s (save encodings), output encodings to csv
     saveOption = False 
@@ -200,9 +209,8 @@ def main():
 
         # If static    
         clientEncoder.sendEncodingsStatic()
-        # clientEncoder.send("STATIC LINK")
-        # Disconnect after sending encodings to the server
-        clientEncoder.soc.send('QUIT'.encode())
+        if staticLink:
+            clientEncoder.send("STATIC LINK")
     
     if dynamicLinkage:
         clientEncoder.continuousDynamicLinkage()
