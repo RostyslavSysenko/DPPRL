@@ -236,17 +236,15 @@ class Server:
 
     def doDynamicLinkage(self):
         # Update clusters
-        pass
-
-
-                
+        pass              
             
-        
-        
 
 def main():
-    # Program parameter: maxConnections (default of 5)
+    # Program parameter: maxConnections (default of 5, optional)
     # Program parameter: port
+    # Usage: server.py port maxConnections
+
+    
 
     server = Server(15)
     server_socket = server.setUpSocketOnCurrentMachine(43555)
