@@ -5,7 +5,8 @@ from BloomFilter import *;
 from enum import Enum
 from bitarray import bitarray
 import socket
-import pickle
+import sys
+import json
 
 class FieldType(Enum):
     INT_ENCODED = 1
@@ -13,16 +14,17 @@ class FieldType(Enum):
     NOT_ENCODED = 3
     
 class FileEncoder:
-    def __init__(self, attributeTypesList, fileLocation):
+    def __init__(self, attributeTypesList, fileLocation):        
         self.attributeTypesList = attributeTypesList
-        self.fileLocation = fileLocation
+        self.fileLocation = fileLocation        
         
+        self.fieldnames = []        
         self.host = "127.0.0.1"
         self.port = 43555
         self.soc = None
         self.id = 0
         self.bf = None
-        self.encodings = None
+        self.encodings = None        
 
     def send(self, message):
         encoded = message.encode()
@@ -37,14 +39,13 @@ class FileEncoder:
         ipv4 = socket.AF_INET
         tcp = socket.SOCK_STREAM
         self.host = host
-        self.port = port
-        
+        self.port = port        
 
         self.soc = socket.socket(ipv4, tcp)
         print("Client socket successfully created")
 
         # connecting to the server
-        self.soc.connect((host, port))
+        self.soc.connect((self.host, self.port))
         print("the socket has successfully connected to server")
         # receive data from the server and decode to get the string.
         print(self.receives())
@@ -89,7 +90,7 @@ class FileEncoder:
 
             # add the encoded string of the row to the list of all encoded rows
             allEncodings.append(encodedRecord)
-
+        # End for record in record dictionary
         self.encodings = allEncodings
 
     def display(self, headRowNumber):
@@ -99,29 +100,42 @@ class FileEncoder:
 
     def saveEncodings(self): # NOT WORKING
         # save self.encodings (list of encoded records stored as strings)
-        outputFile = "Encoded_bloomfilters.csv"
-        with open(outputFile, "wb") as output:
-            pickle.dump(self.encodings, output)
+        outputFile = "Encodings.csv"
+        #with open(outputFile, "wb") as output:
+        #    pickle.dump(self.encodings, output)
+        out = self.encodingsToCsvFormat()
+        pass
         
     def saveEncoding(self, output): # NOT WORKING
         # save self.encodings (list of encoded records stored as strings)
-        outputFile = output
-        with open(outputFile, "wb") as output:
-            pickle.dump(self.encodings, output)
+        #outputFile = output
+        #with open(outputFile, "wb") as output:
+        #    pickle.dump(self.encodings, output)
+        out = self.encodingsToCsvFormat()
+
+        pass
+    
+    def encodingsToCsvFormat(self):
+        
+        pass
 
     def sendEncodingsStatic(self):   
         # Send the encodings for static linkage
         print("Sending encoded data")
         for r in self.encodings:
-            cmd = self.id + " STATIC INSERT " + str(r)
+            # For each record, send as a static insert operation
+            cmd = "STATIC INSERT " + str(r)
             self.soc.send(cmd.encode())
+            # Wait until server acknowledges record recieved.
+            """
             AcknowledgedReceive = False
-            while True:
-                rcvd = self.soc.recv(1024).decode()
+            while not AcknowledgedReceive:                
+                rcvd = self.receives()
                 if rcvd.startswith("ACK"):
                     AcknowledgedReceive = True
-                if AcknowledgedReceive:
-                    break
+            """
+            
+                
             # Continue to next record once acknowledged
         #s.send('LIST'.encode())      
 
@@ -130,17 +144,104 @@ class FileEncoder:
             # Read CSV
             # Detect changes
             # If there are changes update the linkage unit
-        pass
+        pass    
 
+class argumentHandler:
+    def __init__(self):   
+        self.saveOption = False 
+        self.dynamicLinkage = False
+        self.staticLinkage = False
+        self.host = '127.0.0.1'
+        self.port = 43555
+        self.fileLocation = './Client_program/datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv'        
+    
+    def handleArguments(self):
+        argCount = len(sys.argv)
+        if argCount<2:
+            return 1
+        optionsExist = self.handleOptions()
+        if optionsExist & argCount<3:
+            return 1
+        try:
+            if optionsExist:
+                self.fileLocation = sys.argv[2]
+            else: # If there are no options then the first parameter will be the file location
+                self.fileLocation = sys.argv[1]
 
+            # Find if there is a host argument
+            hostArgExists = False
+            lastArg = len(sys.argv) - 1
+            if optionsExist & argCount == 3:
+                hostArgExists = True         
+            
+            # If specified, set the host and port (otherwise use defaults)
+            if hostArgExists:
+                hostArg = sys.argv[lastArg]
+                hostArgSplit = hostArg.split(":")
+                self.host = hostArgSplit[0]
+                self.port = hostArgSplit[1]
+        except:
+            print('ClientEncoder.py -options FileToBeEncoded [...] host:port')
+            sys.exit(2)
+
+    def handleOptions(self):
+        isOptions = False
+        # Arg 1 - Options (optional)            
+        for arg in sys.argv:
+            if arg.startswith("-"):
+                optionArgument = arg
+                isOptions = True
+                # Handle options 
+                for char in optionArgument:
+                    # Options: s, l, d
+                    if char == "s":
+                        self.saveOption = True
+
+                    if char == "l":
+                        self.staticLink = True
+                        print("Doing static link")
+
+                    if char == "d":
+                        self.dynamicLinkage = True  
+        return isOptions
+
+    def defineAttributeTypes(self):
+        # Read a text file in format: FieldType.NOT_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.INT_ENCODED
+        # For different dataset fields, modify "AttributeTypesList.txt"
+        
+        # attriTypeList = [FieldType.NOT_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.INT_ENCODED] # Default value
+        attriTypeList = []
+        # Pass string to a list
+        f = open("./Client_program/AttributeTypesList.txt", 'r')
+        typesList = f.readline()
+        print("Attempting to use attribute types: ", typesList)
+        splitList = typesList.split(', ')
+        for i in splitList:   
+            field = FieldType[i]
+            #print(field)
+            attriTypeList.append(field)
+
+        
+        for i in attriTypeList:
+            assert type(i) == FieldType
+        
+        return attriTypeList
 
 def main():
-    # Argument defaults / initialisation
-    attributeTypesList = [FieldType.NOT_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.INT_ENCODED] # Test this key with all string types.
-    fileLocation = '../Client_program/datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv'
-    dynamicLinkage = False 
-    # Extra functionality program parameter: -s (save encodings), output encodings to csv
-    saveOption = False 
+    # USAGE:
+    # ClientEncoder.py -options FileToBeEncoded host:port 
+   
+    argHandler = argumentHandler()
+    argHandler.handleArguments()
+    fileLocation = argHandler.fileLocation
+    host = argHandler.host
+    port = argHandler.port
+    attributeTypesList = argHandler.defineAttributeTypes()   
+
+    print(fileLocation)
+    
+
+    
 
     # Bloom filter configuration settings
     # To Do: Move to a separate configuration file ON SERVER to be received during AUTH request
@@ -155,26 +256,28 @@ def main():
 
     bf = BF(bf_len, bf_num_hash_func, bf_num_inter, bf_step,
             max_abs_diff, min_val, max_val, q)
-    
+            
+    #clientEncoder = new FileEncoder()
+    #clientEncoder.handleArguments()
     clientEncoder = FileEncoder(attributeTypesList, fileLocation)    
     clientEncoder.encodeByAttribute(bf)
     # If -s "File to output"    
     #clientEncoder.saveEncoding("Filename")
     # Temporary conditionals for testing
-    if saveOption:
+    if argHandler.saveOption:
         clientEncoder.saveEncodings()
     else:
         # Diplay the first 5 encodings and then attempt to connect to the server
         print("Sample of encoded data:")
         clientEncoder.display(5)
-        clientEncoder.connectToServer('127.0.0.1', 43555)    
+        clientEncoder.connectToServer(host, port)    
 
         # If static    
         clientEncoder.sendEncodingsStatic()
-        # Disconnect after sending encodings to the server
-        clientEncoder.soc.send('QUIT'.encode())
+        if argHandler.staticLink:
+            clientEncoder.send("STATIC LINK")
     
-    if dynamicLinkage:
+    if argHandler.dynamicLinkage:
         clientEncoder.continuousDynamicLinkage()
     # Stays running, reading the csv file for updates
 
