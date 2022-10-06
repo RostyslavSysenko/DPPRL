@@ -40,7 +40,7 @@ class Indexer:
 
         search_key = '0101'
 
-        res = list(encodedStr.keys()).index(search_key) #cant figure this one out 
+        res = list(encodedStr.keys()).index(search_key) #cant figure this one out, but very similar to this
 
         print(str(res))
 
