@@ -43,9 +43,10 @@ class client:
             # Receive encoding into client's encodedRecords List.
             splitRcvd = rcvd.split(" ")
             rec = splitRcvd[2]
-            print(rec)
-            newRecord = Utilities.Row(rec)
-            self.encodedRecords.append(newRecord)                    
+            #print(rec) # Debugging
+            #newRecord = Utilities.Row(rec)            
+            self.encodedRecords.append(#newRecord) 
+            rec)                   
             Server.clientSend(self.socket,"ACK")
                                   
 
@@ -53,7 +54,7 @@ class client:
             # Receive encoding
             splitRcvd = rcvd.split(" ")
             rec = splitRcvd[2]                    
-            print(rec)
+            #print(rec) # Debugging
             newRecord = Utilities.Row(rec)
             # self.clusterlist.addRowDynamicNaive(newRecord)
 
@@ -87,9 +88,11 @@ class client:
             self.connectedServer.run = False # When the client tells the server to shutdown, it will.
 
         # Continue receiving messages from that client until no more messages.
+        """
         rcvd = self.connectedServer.receives(self.socket)
         if rcvd != None:
             self.interpretMessage(rcvd)
+        """
         
     def encodedDictionary(self):
         recordDict = {}
@@ -165,6 +168,7 @@ class Server:
         # a forever loop until we interrupt it or an error occurs
         self.run = True        
         while self.run:
+            #print("Running") # Debugging
             events = self.selector.select(timeout=None)
             for key, mask in events:
                 if key.data is None:

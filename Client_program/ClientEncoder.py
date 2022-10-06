@@ -47,7 +47,10 @@ class FileEncoder:
         # connecting to the server
         self.soc.connect((self.host, self.port))
         print("the socket has successfully connected to server")
-        # receive data from the server and decode to get the string.
+        
+    def redundantAuthorise(self):
+        # receive data from the server and decode to get the string.  
+    
         print(self.receives())
         # Ask server to authenticate and assign a client ID.
 
@@ -127,13 +130,13 @@ class FileEncoder:
             cmd = "STATIC INSERT " + str(r)
             self.soc.send(cmd.encode())
             # Wait until server acknowledges record recieved.
-            """
+            
             AcknowledgedReceive = False
             while not AcknowledgedReceive:                
                 rcvd = self.receives()
                 if rcvd.startswith("ACK"):
                     AcknowledgedReceive = True
-            """
+            
             
                 
             # Continue to next record once acknowledged
@@ -153,7 +156,7 @@ class argumentHandler:
         self.staticLinkage = False
         self.host = '127.0.0.1'
         self.port = 43555
-        self.fileLocation = './Client_program/datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv'        
+        self.fileLocation = './datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv'        
     
     def handleArguments(self):
         argCount = len(sys.argv)
@@ -212,7 +215,8 @@ class argumentHandler:
         # attriTypeList = [FieldType.NOT_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.INT_ENCODED] # Default value
         attriTypeList = []
         # Pass string to a list
-        f = open("./Client_program/AttributeTypesList.txt", 'r')
+        attriTypeLocation = "./AttributeTypesList.txt"
+        f = open(attriTypeLocation, 'r')
         typesList = f.readline()
         print("Attempting to use attribute types: ", typesList)
         splitList = typesList.split(', ')
