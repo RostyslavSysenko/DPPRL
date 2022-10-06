@@ -16,15 +16,16 @@ class FieldType(Enum):
 class FileEncoder:
     def __init__(self, attributeTypesList, fileLocation):        
         self.attributeTypesList = attributeTypesList
-        self.fileLocation = fileLocation        
-        
-        self.fieldnames = []        
+        self.fileLocation = fileLocation               
+    
         self.host = "127.0.0.1"
         self.port = 43555
         self.soc = None
         self.id = 0
         self.bf = None
-        self.encodings = None        
+        self.encodings = []   
+        self.recordDict = bf.__read_csv_file__(self.fileLocation, True, 0)  
+        self.fieldnames = []#self.recordDict.keys()    
 
     def send(self, message):
         encoded = message.encode()
@@ -60,17 +61,14 @@ class FileEncoder:
         print("Client ID is ", self.id)
 
     
-    def encodeByAttribute(self, bf):
-        recordDict = bf.__read_csv_file__(self.fileLocation, True, 0)
-        allEncodings = []
-
-        for rec in recordDict:
+    def encodeByAttribute(self, bf):        
+        for rec in self.recordDict:
             encodedRecord = ""
             encodedAttributesOfRow = []
 
             # Populate encoded attributes of row array using the INT/STR datatype key
             for attributeIdx in range(0, len(self.attributeTypesList)):
-                currentAttribute = recordDict[rec][attributeIdx]
+                currentAttribute = self.recordDict[rec][attributeIdx]
                 encodedAttribute = None
 
                 if (self.attributeTypesList[attributeIdx] == FieldType.INT_ENCODED):
@@ -92,15 +90,14 @@ class FileEncoder:
                 encodedRecord += encodedAttr + ","
 
             # add the encoded string of the row to the list of all encoded rows
-            allEncodings.append(encodedRecord)
-        # End for record in record dictionary
-        self.encodings = allEncodings
+            self.encodings.append(encodedRecord)
+        # End of loop: for record in record dictionary        
 
     def display(self, headRowNumber):
         # headRowNumber is the number of rows starting from the top
         for i in range(0, headRowNumber):
             print(self.encodings[i])
-
+    """
     def saveEncodings(self): # NOT WORKING
         # save self.encodings (list of encoded records stored as strings)
         outputFile = "Encodings.csv"
@@ -121,16 +118,17 @@ class FileEncoder:
     def encodingsToCsvFormat(self):
         
         pass
-
+    """
     def sendEncodingsStatic(self):   
         # Send the encodings for static linkage
+        print("Sending dictionary key: ", self.fieldnames)
+        self.send("KEY " + str(self.fieldnames))
         print("Sending encoded data")
         for r in self.encodings:
             # For each record, send as a static insert operation
             cmd = "STATIC INSERT " + str(r)
-            self.soc.send(cmd.encode())
-            # Wait until server acknowledges record recieved.
-            
+            self.send(cmd)
+            # Wait until server acknowledges record recieved before sending next one.            
             AcknowledgedReceive = False
             while not AcknowledgedReceive:                
                 rcvd = self.receives()
@@ -153,7 +151,7 @@ class argumentHandler:
     def __init__(self):   
         self.saveOption = False 
         self.dynamicLinkage = False
-        self.staticLinkage = False
+        self.staticLink = False
         self.host = '127.0.0.1'
         self.port = 43555
         self.fileLocation = './datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv'        
@@ -168,7 +166,7 @@ class argumentHandler:
         try:
             if optionsExist:
                 self.fileLocation = sys.argv[2]
-            else: # If there are no options then the first parameter will be the file location
+            elif sys.argv[1]: # If there are no options then the first parameter will be the file location
                 self.fileLocation = sys.argv[1]
 
             # Find if there is a host argument

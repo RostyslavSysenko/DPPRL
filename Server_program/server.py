@@ -1,5 +1,3 @@
-# External modules
-from audioop import add
 import socket
 import selectors
 import types
@@ -68,10 +66,10 @@ class client:
             for i in self.encodedRecords:
                 print(i)
         
-        if rcvd.startswith("INFO"):
-            # Print info about client.
-            print(self.clientId + " ")
-            print(self.address + " ")
+        if rcvd.startswith("KEY"):
+            # Set the Dict -> JSON key for format conversion
+            dictkey = rcvd
+            
 
         if rcvd.startswith("STATIC LINK"):
             # To do: Controller client on server side that sends this command?
@@ -83,21 +81,10 @@ class client:
         # More commands to be entered here        
         
         if rcvd == 'QUIT':
-            self.socket.close()
-            # remove the client
-            self.connectedServer.run = False # When the client tells the server to shutdown, it will.
-
-        # Continue receiving messages from that client until no more messages.
-        """
-        rcvd = self.connectedServer.receives(self.socket)
-        if rcvd != None:
-            self.interpretMessage(rcvd)
-        """
+            # remove the client socket
+            self.socket.close()            
+            self.connectedServer.run = False # When the client tells the server to shutdown, it will.       
         
-    def encodedDictionary(self):
-        recordDict = {}
-
-        return recordDict     
 
 
 class Server:
@@ -169,7 +156,7 @@ class Server:
         self.run = True        
         while self.run:
             #print("Running") # Debugging
-            events = self.selector.select(timeout=None)
+            events = self.selector.select(timeout=200)
             for key, mask in events:
                 if key.data is None:
                     self.acceptNewConnection(key.fileobj)
@@ -187,7 +174,7 @@ class Server:
                     if connClient.socket == connSocket:
                         connClient.interpretMessage(rcvd)                        
             else:
-                print("Closing connection to: ", )
+                print("Closing connection to: ", mask)
                 self.selector.unregister(connSocket)
                 connSocket.close()     
         if mask & selectors.EVENT_WRITE:
@@ -235,7 +222,7 @@ class Server:
             
 
         # Static linkage with 3 databases
-        staticLinkage(db1, db2, db3)
+        staticLinkage.staticLinkage(db1, db2, db3)
         pass
 
     def doDynamicLinkage(self):
