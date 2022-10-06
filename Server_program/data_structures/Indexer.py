@@ -13,6 +13,16 @@ class Indexer:
         # input: list of Row objects 
         # out: build up self.indexingDictionary 
 
+        index = index.encodedStr[3:20]
+
+        print(index)
+
+
+
+        #or 
+
+        
+
         # list 
 
         #index = index.encodedStr[3:100]
@@ -27,6 +37,14 @@ class Indexer:
         # outout: some sort of key (maybe string or number)
         # TO-DO
         # takes in a row and based on the indexing specification of ClusterList extracts the indexing key and returns it
+
+        search_key = '0101'
+
+        res = list(encodedStr.keys()).index(search_key) #cant figure this one out 
+
+        print(str(res))
+
+
         pass
 
         # step 2:
