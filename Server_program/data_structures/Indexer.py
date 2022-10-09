@@ -15,13 +15,14 @@ class Indexer:
 
         index = index.encodedStr[3:20]
 
-        print(index)
+        print(index) #need to add more in the indexing to connect it to the indexing 
 
 
 
         #or 
 
         
+        encodedStr_at_index = list(dic.encodedStr())[index]
 
         # list 
 
@@ -40,9 +41,12 @@ class Indexer:
 
         search_key = '0101'
 
-        res = list(encodedStr.keys()).index(search_key) #cant figure this one out 
+        res = list(encodedStr.keys()).index(search_key) #cant figure this one out, but very similar to this
 
         print(str(res))
+
+
+
 
 
         pass
