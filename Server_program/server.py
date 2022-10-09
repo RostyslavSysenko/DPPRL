@@ -220,6 +220,10 @@ class Server:
     def assignId(self):
         # connection handling for multiple clients  
         # Find currently assigned IDs
+
+        # NEEDS TO TAKE INTO ACCOUNT CURRENTLY EXISTING JSON FILES AND USE A NAME NOT ALREADY TAKEN
+        # also consider the address of the sender, unique address = unique clientId (maybe store this in a log file)
+
         possibleIds = range(1,self.maxConnections)
         currentlyAssigned = []
         for clients in self.connectedClients:
