@@ -13,7 +13,7 @@ class Operation(Enum):
 class Row:
     # non modifiable currently
     def __init__(self,encodedStr: str, nonEncodedAttrubuteDict =None, rowId = None, DbId = None):
-        self.encodedRowString = encodedStr
+        self.encodedRowString = encodedStr # Encoded attributes separated by commas
         self.rowListRepresentation = [int(char) for char in encodedStr]
         self.nonEncodedAttrubuteDict =nonEncodedAttrubuteDict
 

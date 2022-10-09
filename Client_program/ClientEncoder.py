@@ -25,7 +25,7 @@ class FileEncoder:
         self.bf = None
         self.encodings = []   
         self.recordDict = bf.__read_csv_file__(self.fileLocation, True, 0)  
-        self.fieldnames = []#self.recordDict.keys()    
+        self.fieldnames = [] #self.recordDict.keys()    
 
     def send(self, message):
         encoded = message.encode()
@@ -122,7 +122,7 @@ class FileEncoder:
     def sendEncodingsStatic(self):   
         # Send the encodings for static linkage
         print("Sending dictionary key: ", self.fieldnames)
-        self.send("KEY " + str(self.fieldnames))
+        #self.send("KEY " + str(self.fieldnames))
         print("Sending encoded data")
         for r in self.encodings:
             # For each record, send as a static insert operation
@@ -134,10 +134,10 @@ class FileEncoder:
                 rcvd = self.receives()
                 if rcvd.startswith("ACK"):
                     AcknowledgedReceive = True
-            
-            
+                    
+        rcvd.send("SAVE") # Tell server to save          
                 
-            # Continue to next record once acknowledged
+        # Continue to next record once acknowledged
         #s.send('LIST'.encode())      
 
     def continuousDynamicLinkage():

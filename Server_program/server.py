@@ -1,10 +1,11 @@
 import socket
 import selectors
 import types
+import json
 
 # Internal modules
 from centralDataStructure import Utilities
-from clustering import staticLinkage
+#from clustering import staticLinkage
 #from clustering import IncrementalClusterInput
 #from clustering import DynamicClustering
 #from centralDataStructure import ClusterList
@@ -28,10 +29,36 @@ class client:
         self.address = address
         self.connectedServer = server
         self.encodedRecords = [] # Using dictionary instead
+        self.dictKey = ['rec_id', 'first_name', 'last_name', 'city', 'zip_code'] # For debugging
         # self.clusterlist = data_structures.ClusterList()
+        self.jsonRecords = []
+        self.jsonFileName = str(self.clientId) + "_records.json"
+
+    def saveToJson(self):
+        jsonfile = open(self.jsonFileName, 'w')
+        jsonfile.write(json.dumps(self.jsonRecords))
+
+
+    def convertToJson(self, input, key):
+        assert type(input) == str
+        assert type(key) == list
+
+        str(input)
+        inputAttributes = input.split(',')
+
+        dict = {}
+        counter = 0
+        for attribute in key:
+            dict[attribute] = inputAttributes[counter]
+            counter+=1
+
+            
+        jsonString = json.dumps(dict)
+        return jsonString
 
     def interpretMessage(self, rcvd):
         assert type(rcvd) == str
+
         if rcvd == 'AUTH':
             # Locally assign a client identifier
             id = self.connectedServer.assignId()
@@ -41,6 +68,9 @@ class client:
             # Receive encoding into client's encodedRecords List.
             splitRcvd = rcvd.split(" ")
             rec = splitRcvd[2]
+            recJson = self.convertToJson(rec, self.dictKey)    
+            print(recJson)  
+            self.jsonRecords.append(recJson)
             #print(rec) # Debugging
             #newRecord = Utilities.Row(rec)            
             self.encodedRecords.append(#newRecord) 
@@ -51,9 +81,11 @@ class client:
         if rcvd.startswith("DYNAMIC INSERT"):
             # Receive encoding
             splitRcvd = rcvd.split(" ")
-            rec = splitRcvd[2]                    
+            rec = splitRcvd[2]     
+            recJson = Utilities.convertToJson(rec, self.dictKey)    
+            print(recJson)           
             #print(rec) # Debugging
-            newRecord = Utilities.Row(rec)
+            #newRecord = Utilities.Row.parseFromJson(recJson)
             # self.clusterlist.addRowDynamicNaive(newRecord)
 
         if rcvd.startswith("DYNAMIC UPDATE"):
@@ -68,17 +100,19 @@ class client:
         
         if rcvd.startswith("KEY"):
             # Set the Dict -> JSON key for format conversion
-            dictkey = rcvd
-            
+            self.dictKey = rcvd            
 
         if rcvd.startswith("STATIC LINK"):
             # To do: Controller client on server side that sends this command?
             print("Performing static linkage")
-            self.connectedServer.doStaticLinkage()
+            #self.connectedServer.doStaticLinkage()
             
+        if rcvd.startswith("SAVE"):
+            # Move this line to reduce amount of writes to disk (especially important for HDD)
+            self.saveToJson()  
 
         # if rcvd.startswith("")
-        # More commands to be entered here        
+        # More commands to be entered here
         
         if rcvd == 'QUIT':
             # remove the client socket
@@ -233,9 +267,7 @@ class Server:
 def main():
     # Program parameter: maxConnections (default of 5, optional)
     # Program parameter: port
-    # Usage: server.py port maxConnections
-
-    
+    # Usage: server.py port maxConnections    
 
     server = Server(15)
     server_socket = server.setUpSocketOnCurrentMachine(43555)

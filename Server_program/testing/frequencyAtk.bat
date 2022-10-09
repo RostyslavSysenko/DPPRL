@@ -1,0 +1,2 @@
+python securityTests.py
+PAUSE
