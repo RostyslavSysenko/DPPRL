@@ -26,28 +26,31 @@ class Row:
         self.DbId=DbId
 
         self.clusterRef = None # this will be updated during cluster assignment
-# parse jsonStr into dictionary object:
-        jsonObj = json.loads(jsonStr)
+
+
+        def parseFromJson(jsonStr):
+    # parse jsonStr into dictionary object:
+            jsonObj = json.loads(jsonStr)
 
         # creating encoded string
-        lstOfEncodings = list(jsonObj["encodedAttributes"].values())
-        encodedStr =   ''.join(lstOfEncodings) #concat all encodings in a list
+            lstOfEncodings = list(jsonObj["encodedAttributes"].values())
+            encodedStr =   ''.join(lstOfEncodings) #concat all encodings in a list
 
 
-        row = Row(
+            row = Row(
                 DbId= jsonObj["DBId"],
                 rowId = jsonObj["rowId"],
                 encodedStr = encodedStr,
                 nonEncodedAttrubuteDict= jsonObj["nonEncodedAttributes"]
                 )
-        return row
+            return row
 
     
     def initialIndexBuild(self, Row): # [Row(),Row()..]
         # input: list of Row objects 
         # out: build up self.indexingDictionary
 
-        row_build = {DbId,rowId}
+        row_build = {self.DbId,self.rowId}
 
 
         values = row_build.values
@@ -76,7 +79,7 @@ class Row:
         # TO-DO
         # takes in a row and based on the indexing specification of ClusterList extracts the indexing key and returns it
 
-        row_build = {DbId,rowId}
+        row_build = {self.DbId,self.rowId}
 
         keys_list  = list(row_build)
         
