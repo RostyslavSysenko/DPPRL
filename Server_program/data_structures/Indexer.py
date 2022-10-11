@@ -81,11 +81,15 @@ class Row:
 
         row_build = {self.DbId,self.rowId}
 
-        keys_list  = list(row_build)
+        def GetKey(val):
+            for key, value in row_build.items():
+                 if val == value:
+                    return key
+                 return "key doesn't exist"
+        print(GetKey(0))
         
-        key = keys_list[0]
 
-        print(key)
+        
 
 
 
