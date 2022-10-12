@@ -1,20 +1,20 @@
 from enum import Enum
-from logging import exception
-from mimetypes import init
 from BloomFilter import *;
 from enum import Enum
 from bitarray import bitarray
-import pickle 
+import pickle # FOR CSV
 import socket
-import sys
 import json
+from argHandler import argumentHandler
 
-from Server_program.communication.client import client
+# Were these 2 added accidentally by vscode?
+from logging import exception
+from mimetypes import init
 
 class FieldType(Enum):
     INT_ENCODED = 1
     STR_ENCODED = 2
-    NOT_ENCODED = 3
+    NOT_ENCODED = 3 # UNIQUE IDENTIFIER
     
 class FileEncoder:
     def __init__(self, attributeTypesList, fileLocation):        
@@ -60,7 +60,7 @@ class FileEncoder:
             currentAttribute = self.recordDict[rec][attributeIdx]
             encodedAttribute = None
 
-            # Using the input attributeTypesList (stored in the txt), encode attributes accordingly.
+            # Use the input attributeTypesList to encode attributes accordingly.
             if (self.attributeTypesList[attributeIdx] == FieldType.INT_ENCODED):
                 numerical = int(currentAttribute)
                 intValueSet1, intValueSet2 = bf.convert_num_val_to_set(numerical, 0)  # 0 is a magic number
@@ -116,7 +116,6 @@ class FileEncoder:
                 self.waitForAcknowledge()
         
         # Each record is sent as a STATIC INSERT as static linkage does not account for UPDATE or DELETE operations.
-        self.send("SAVE") # Tell server to save the received encodings after finished sending.
 
     def waitForAcknowledge(self):
         # Wait until server acknowledges before continuing.        
@@ -149,7 +148,7 @@ class FileEncoder:
             if attribute == "NOT_ENCODED":
                 notCount += 1
                 count = notCount
-                attributeName = "UnencodedAttribute_"
+                attributeName = "RowId"
             if attribute == "STR_ENCODED":
                 strCount += 1
                 count = strCount
@@ -185,85 +184,6 @@ class FileEncoder:
             print("ERROR APPENDING JSON RECORD TO LIST")
         return thisRecordJson
 
-class argumentHandler:
-    def __init__(self):   
-        self.saveOption = False 
-        self.dynamicLinkage = False
-        self.staticLink = False
-        self.host = '127.0.0.1'
-        self.port = 43555
-        self.fileLocation = './datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv' 
-        self.attributeList = None
-    
-    def handleArguments(self):
-        argCount = len(sys.argv)
-        if argCount<2:
-            return 1
-        optionsExist = self.handleOptions()
-        if optionsExist & argCount<3:
-            return 1
-        try:
-            if optionsExist:
-                self.fileLocation = sys.argv[2]
-            elif sys.argv[1]: # If there are no options then the first parameter will be the file location
-                self.fileLocation = sys.argv[1]
-
-            # Find if there is a host argument
-            hostArgExists = False
-            lastArg = len(sys.argv) - 1
-            if optionsExist & argCount == 3:
-                hostArgExists = True         
-            
-            # If specified, set the host and port (otherwise use defaults)
-            if hostArgExists:
-                hostArg = sys.argv[lastArg]
-                hostArgSplit = hostArg.split(":")
-                self.host = hostArgSplit[0]
-                self.port = hostArgSplit[1]
-        except:
-            print('ClientEncoder.py -options FileToBeEncoded [...] host:port')
-            sys.exit(2)
-
-    def handleOptions(self):
-        isOptions = False
-        # Arg 1 - Options (optional)            
-        for arg in sys.argv:
-            if arg.startswith("-"):
-                optionArgument = arg
-                isOptions = True
-                # Handle options 
-                for char in optionArgument:
-                    # Options: s, l, d
-                    if char == "s":
-                        self.saveOption = True
-
-                    if char == "l":
-                        self.staticLink = True
-                        print("Doing static link")
-
-                    if char == "d":
-                        self.dynamicLinkage = True  
-        return isOptions
-
-    def defineAttributeTypes(self):
-        # Read a text file in format: NOT_ENCODED, STR_ENCODED, STR_ENCODED, STR_ENCODED, INT_ENCODED
-        # For a different dataset, modify "AttributeTypesList.txt" to your requirements
-        
-        attriTypeList = []
-        # Pass txt to a list of FieldTypes (and store self.attributeList for naming purposes)
-        attriTypeLocation = "./AttributeTypesList.txt"  
-        f = open(attriTypeLocation, 'r')
-        typesList = f.readline()
-        print("Use attribute types from", attriTypeLocation ," : ", typesList)
-        self.attributeList = typesList.split(', ')
-        for i in self.attributeList:   
-            field = FieldType[i]
-            attriTypeList.append(field)
-        
-        for i in attriTypeList:
-            assert type(i) == FieldType
-        
-        return attriTypeList 
 
 def main():
     # USAGE:
@@ -293,16 +213,19 @@ def main():
     clientEncoder = FileEncoder(attributeTypesList, fileLocation)
     clientEncoder.nameAttributes(argHandler)
 
+    # Perform encoding
     for record in clientEncoder.recordDict:
         encodedAttributes = clientEncoder.encodeByAttribute(bf, record)
         #print(encodedAttributes)
         jsonEncodedRecord = clientEncoder.toJson(encodedAttributes)
         print(jsonEncodedRecord)
-  
+
+    
     # If -s then save encodings in CSV (final delivery / D7, not currently working)
     if argHandler.saveOption:
         clientEncoder.saveEncodings()
-    else:
+    
+    if not argHandler.dynamicLinkage:
         # Diplay the first 5 encodings and then attempt to connect to the server
         print("Sample of encoded data:")
         clientEncoder.display(5)
@@ -310,6 +233,7 @@ def main():
 
         # If static    
         clientEncoder.sendEncodingsStatic()
+        clientEncoder.send("SAVE") # Tell server to save the received encodings after finished sending.
         clientEncoder.waitForAcknowledge()
 
         if argHandler.staticLink: # This is sent on third dataset for demonstration (-l)

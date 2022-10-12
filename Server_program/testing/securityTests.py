@@ -1,6 +1,16 @@
     # Uses code from: # Frequency Finder # http://inventwithpython.com/hacking (BSD Licensed)
     # frequency taken from http://en.wikipedia.org/wiki/Letter_frequency
 
+"""
+frequency comparison - count each duplicate occurence of a bloom filter encoding
+Try a dictionary attack
+compare with various datasets such as city populations, zipcode populations, common first name and common last name
+find real data and compare your results (see how accurate your guesses were)
+
+You guys know more about this than I do, maybe there is a way to figure out what a single bit might represent to completely decode them? Try a letter frequency attack.
+Add to this code rather than replacing it, I know it's not exactly what you need but it's a good place to start.
+"""
+
 
 class frequencyAttack:
     def __init__(self) -> None:
@@ -12,7 +22,7 @@ class frequencyAttack:
 
 
     def getFreqCount(self,message,key):
-    # Returns a dictionary with keys of single letters and values of the
+    # Returns a dictionary with key of every letter and value counting their frequency
     # count of how many times they appear in the message parameter.
 
 

@@ -28,22 +28,22 @@ class Row:
         self.clusterRef = None # this will be updated during cluster assignment
 
 
-        def parseFromJson(jsonStr):
+    def parseFromJson(jsonStr):
     # parse jsonStr into dictionary object:
-            jsonObj = json.loads(jsonStr)
+        jsonObj = json.loads(jsonStr)
 
-        # creating encoded string
-            lstOfEncodings = list(jsonObj["encodedAttributes"].values())
-            encodedStr =   ''.join(lstOfEncodings) #concat all encodings in a list
+    # creating encoded string
+        lstOfEncodings = list(jsonObj["encodedAttributes"].values())
+        encodedStr =   ''.join(lstOfEncodings) #concat all encodings in a list
 
 
-            row = Row(
-                DbId= jsonObj["DBId"],
-                rowId = jsonObj["rowId"],
-                encodedStr = encodedStr,
-                nonEncodedAttrubuteDict= jsonObj["nonEncodedAttributes"]
-                )
-            return row
+        row = Row(
+            DbId= jsonObj["DBId"],
+            rowId = jsonObj["rowId"],
+            encodedStr = encodedStr,
+            nonEncodedAttrubuteDict= jsonObj["nonEncodedAttributes"]
+            )
+        return row
 
     
     def initialIndexBuild(self, Row): # [Row(),Row()..]

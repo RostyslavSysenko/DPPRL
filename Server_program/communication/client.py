@@ -45,34 +45,13 @@ class client:
         self.socket.send(encoded)
 
     def saveToJson(self):
-        jsonfile = open(self.jsonFileName, 'w')
-        jsonfile.write(json.dumps(self.jsonRecords))
+        print("Saving JSON list to file: ", self.jsonFileName)
+        with open(self.jsonFileName, 'w') as file:
+            json.dump(self.jsonRecords, file, indent=1)
 
-
-    def convertToJson(self, input, key):
-        assert type(input) == str
-        assert type(key) == list
-
-        str(input)
-        inputAttributes = input.split(',')
-
-        dict = {}
-        counter = 0
-        for attribute in key:
-            dict[attribute] = inputAttributes[counter]
-            counter+=1
-
-            
-        jsonString = json.dumps(dict)
-        return jsonString
 
     def interpretMessage(self, rcvd):
         assert type(rcvd) == str
-
-        if rcvd == 'AUTH':
-            # Locally assign a client identifier
-            id = self.connectedServer.assignId()
-            print("New connection was assigned the clientId: ", id)
                                           
         if rcvd.startswith("STATIC INSERT"):
             # Receive encoding into client's encodedRecords List.
@@ -121,7 +100,8 @@ class client:
             # This functionality might be superceded by the QUIT command.
             
             # Move this line to reduce amount of writes to disk (especially important for HDD)
-            self.saveToJson()  
+            self.saveToJson() 
+            self.send("ACK") 
 
         # if rcvd.startswith("")
         # More commands to be entered here
