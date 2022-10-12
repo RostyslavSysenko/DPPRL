@@ -4,6 +4,7 @@ from mimetypes import init
 from BloomFilter import *;
 from enum import Enum
 from bitarray import bitarray
+import pickle 
 import socket
 import sys
 import json
@@ -21,11 +22,10 @@ class FileEncoder:
         self.host = "127.0.0.1"
         self.port = 43555
         self.soc = None
-        self.id = 0
-        self.bf = None
         self.encodings = []   
-        self.recordDict = bf.__read_csv_file__(self.fileLocation, True, 0)  
-        self.fieldnames = [] #self.recordDict.keys()    
+        self.attributeNames = []
+        self.jsonEncodings = []
+        self.recordDict = bf.__read_csv_file__(self.fileLocation, True, 0) 
 
     def send(self, message):
         encoded = message.encode()
@@ -47,78 +47,58 @@ class FileEncoder:
 
         # connecting to the server
         self.soc.connect((self.host, self.port))
-        print("the socket has successfully connected to server")
-        
-    def redundantAuthorise(self):
-        # receive data from the server and decode to get the string.  
+        print("the socket has successfully connected to server")       
     
-        print(self.receives())
-        # Ask server to authenticate and assign a client ID.
+    def encodeByAttribute(self, bf, rec):       
+        # Running inside for record in dictionary loop
+        encodedAttributesOfRow = []
+        encodedRecord = ""
+        # Populate encodedAttributesOfRow using the INT/STR attribute type key
+        for attributeIdx in range(0, len(self.attributeTypesList)):
+            currentAttribute = self.recordDict[rec][attributeIdx]
+            encodedAttribute = None
 
-        self.send('AUTH')
-        rcvd = self.receives()
-        self.id = rcvd
-        print("Client ID is ", self.id)
+            # Using the input attributeTypesList (stored in the txt), encode attributes accordingly.
+            if (self.attributeTypesList[attributeIdx] == FieldType.INT_ENCODED):
+                numerical = int(currentAttribute)
+                intValueSet1, intValueSet2 = bf.convert_num_val_to_set(numerical, 0)  # 0 is a magic number
+                encodedAttribute = bf.set_to_bloom_filter(intValueSet1) 
+            if (self.attributeTypesList[attributeIdx] == FieldType.STR_ENCODED):
+                encodedAttribute = bf.set_to_bloom_filter(currentAttribute)
+            if (self.attributeTypesList[attributeIdx] == FieldType.NOT_ENCODED):
+                encodedAttribute = currentAttribute
 
-    
-    def encodeByAttribute(self, bf):        
-        for rec in self.recordDict:
-            encodedRecord = ""
-            encodedAttributesOfRow = []
+            assert encodedAttribute != None, encodedAttribute
+            # Format as just a string of binary rather than including "bitarray()"
+            formattedEncoding = str(encodedAttribute)
+            formattedEncoding = formattedEncoding.strip("bitarray('')")
+            encodedAttributesOfRow.append(formattedEncoding)
 
-            # Populate encoded attributes of row array using the INT/STR datatype key
-            for attributeIdx in range(0, len(self.attributeTypesList)):
-                currentAttribute = self.recordDict[rec][attributeIdx]
-                encodedAttribute = None
+        # Add attributes to encodedRecord string, delimited with a comma.
+        for i in encodedAttributesOfRow:         
+            encodedRecord += i + ","
 
-                if (self.attributeTypesList[attributeIdx] == FieldType.INT_ENCODED):
-                    numerical = int(currentAttribute)
-                    intValueSet1, intValueSet2 = bf.convert_num_val_to_set(numerical, 0)  # This part may be unfinished
-                    encodedAttribute = bf.set_to_bloom_filter(intValueSet1)
-                if (self.attributeTypesList[attributeIdx] == FieldType.STR_ENCODED):
-                    encodedAttribute = bf.set_to_bloom_filter(currentAttribute)
-                if (self.attributeTypesList[attributeIdx] == FieldType.NOT_ENCODED):
-                    encodedAttribute = currentAttribute
-
-                assert encodedAttribute != None, encodedAttribute
-                encodedAttributesOfRow.append(str(encodedAttribute))
-                
-            # Delimit encoded attributes with a comma into a single string
-            for i in encodedAttributesOfRow:
-                encodedAttr = i.strip("bitarray('')")
-                # print(encodedAttr) # Debugging
-                encodedRecord += encodedAttr + ","
-
-            # add the encoded string of the row to the list of all encoded rows
-            self.encodings.append(encodedRecord)
-        # End of loop: for record in record dictionary        
+        # add the encoded string of the row to the list of all encoded rows
+        self.encodings.append(encodedRecord)
+        return encodedAttributesOfRow
 
     def display(self, headRowNumber):
         # headRowNumber is the number of rows starting from the top
         for i in range(0, headRowNumber):
             print(self.encodings[i])
-    """
+
     def saveEncodings(self): # NOT WORKING
         # save self.encodings (list of encoded records stored as strings)
         outputFile = "Encodings.csv"
-        #with open(outputFile, "wb") as output:
-        #    pickle.dump(self.encodings, output)
-        out = self.encodingsToCsvFormat()
-        pass
-        
-    def saveEncoding(self, output): # NOT WORKING
-        # save self.encodings (list of encoded records stored as strings)
-        #outputFile = output
-        #with open(outputFile, "wb") as output:
-        #    pickle.dump(self.encodings, output)
-        out = self.encodingsToCsvFormat()
-
+        outputFormatted = self.encodingsToCsvFormat()
+        with open(outputFile, "wb") as output:
+            pickle.dump(outputFormatted, output)
         pass
     
     def encodingsToCsvFormat(self):
-        
+        # Extra functionality for product delivery
         pass
-    """
+
     def sendEncodingsStatic(self):   
         # Send the encodings for static linkage
         print("Sending dictionary key: ", self.fieldnames)
@@ -128,24 +108,73 @@ class FileEncoder:
             # For each record, send as a static insert operation
             cmd = "STATIC INSERT " + str(r)
             self.send(cmd)
-            # Wait until server acknowledges record recieved before sending next one.            
+            # Wait until server acknowledges record recieved before sending next one.         
             AcknowledgedReceive = False
             while not AcknowledgedReceive:                
                 rcvd = self.receives()
                 if rcvd.startswith("ACK"):
                     AcknowledgedReceive = True
                     
-        rcvd.send("SAVE") # Tell server to save          
-                
-        # Continue to next record once acknowledged
-        #s.send('LIST'.encode())      
+        rcvd.send("SAVE") # Tell server to save the encodings after sending.          
 
-    def continuousDynamicLinkage():
+    def continuousDynamicLinkage(self):
         # While True
             # Read CSV
             # Detect changes
             # If there are changes update the linkage unit
         pass    
+
+    def nameAttributes(self, argHandler):
+        # Populate self.attributeNames using input format: NOT_ENCODED, STR_ENCODED, STR_ENCODED, STR_ENCODED, INT_ENCODED
+        attributeTypes = argHandler.attributeList
+        # Count instances of NOT/STR/INT
+        notCount = 0
+        strCount = 0
+        intCount = 0
+
+        # Generate unique field names
+        index = 0
+        count = 0
+        for attribute in attributeTypes:
+            attributeName = str(attribute)
+            if attribute == "NOT_ENCODED":
+                notCount += 1
+                count = notCount
+                attributeName = "UnencodedAttribute_"
+            if attribute == "STR_ENCODED":
+                strCount += 1
+                count = strCount
+                attributeName = "StringAttribute_"
+            if attribute == "INT_ENCODED":
+                intCount += 1
+                count = intCount
+                attributeName = "IntegerAttribute_"
+            else:
+                attribute.join("UNCLASSIFIED")
+            
+            name = attributeName + str(count)
+            self.attributeNames.append(name)
+            index += 1
+
+        # Make names lowercase
+        for attribute in self.attributeNames:
+            attribute = attribute.lower()
+
+    def toJson(self, attributes):
+        # Using attributeNames array, assign each attribute to a json value.
+        thisRecordJson = {}
+        index = 0
+        for attribute in self.attributeNames:
+            if index < len(attributes):
+                thisRecordJson[attribute] = attributes[index]
+                index += 1
+
+        thisRecordJson = json.dumps(thisRecordJson, indent=1)
+        if type(thisRecordJson) == str: # JSON objects are stored as strings in python.
+            self.jsonEncodings.append(thisRecordJson)
+        else:
+            print("ERROR APPENDING JSON RECORD TO LIST")
+        return thisRecordJson
 
 class argumentHandler:
     def __init__(self):   
@@ -154,7 +183,8 @@ class argumentHandler:
         self.staticLink = False
         self.host = '127.0.0.1'
         self.port = 43555
-        self.fileLocation = './datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv'        
+        self.fileLocation = './datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv' 
+        self.attributeList = None
     
     def handleArguments(self):
         argCount = len(sys.argv)
@@ -207,27 +237,24 @@ class argumentHandler:
         return isOptions
 
     def defineAttributeTypes(self):
-        # Read a text file in format: FieldType.NOT_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.INT_ENCODED
-        # For different dataset fields, modify "AttributeTypesList.txt"
+        # Read a text file in format: NOT_ENCODED, STR_ENCODED, STR_ENCODED, STR_ENCODED, INT_ENCODED
+        # For a different dataset, modify "AttributeTypesList.txt" to your requirements
         
-        # attriTypeList = [FieldType.NOT_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.STR_ENCODED, FieldType.INT_ENCODED] # Default value
         attriTypeList = []
-        # Pass string to a list
-        attriTypeLocation = "./AttributeTypesList.txt"
+        # Pass txt to a list of FieldTypes (and store self.attributeList for naming purposes)
+        attriTypeLocation = "./AttributeTypesList.txt"  
         f = open(attriTypeLocation, 'r')
         typesList = f.readline()
-        print("Attempting to use attribute types: ", typesList)
-        splitList = typesList.split(', ')
-        for i in splitList:   
+        print("Use attribute types: ", typesList)
+        self.attributeList = typesList.split(', ')
+        for i in self.attributeList:   
             field = FieldType[i]
-            #print(field)
             attriTypeList.append(field)
-
         
         for i in attriTypeList:
             assert type(i) == FieldType
         
-        return attriTypeList
+        return attriTypeList 
 
 def main():
     # USAGE:
@@ -238,17 +265,12 @@ def main():
     fileLocation = argHandler.fileLocation
     host = argHandler.host
     port = argHandler.port
-    attributeTypesList = argHandler.defineAttributeTypes()   
-
-    print(fileLocation)
-    
-
-    
+    attributeTypesList = argHandler.defineAttributeTypes()       
 
     # Bloom filter configuration settings
-    # To Do: Move to a separate configuration file ON SERVER to be received during AUTH request
-    bf_len = 50  # 50
-    bf_num_hash_func = 2  # 2
+    # To Do: Move to a separate configuration file
+    bf_len = 50
+    bf_num_hash_func = 2
     bf_num_inter = 5
     bf_step = 1
     max_abs_diff = 20
@@ -258,14 +280,17 @@ def main():
 
     bf = BF(bf_len, bf_num_hash_func, bf_num_inter, bf_step,
             max_abs_diff, min_val, max_val, q)
-            
-    #clientEncoder = new FileEncoder()
-    #clientEncoder.handleArguments()
-    clientEncoder = FileEncoder(attributeTypesList, fileLocation)    
-    clientEncoder.encodeByAttribute(bf)
-    # If -s "File to output"    
-    #clientEncoder.saveEncoding("Filename")
-    # Temporary conditionals for testing
+
+    clientEncoder = FileEncoder(attributeTypesList, fileLocation)
+    clientEncoder.nameAttributes(argHandler)
+
+    for record in clientEncoder.recordDict:
+        encodedAttributes = clientEncoder.encodeByAttribute(bf, record)
+        print(encodedAttributes)
+        jsonEncodedRecord = clientEncoder.toJson(encodedAttributes)
+        print(jsonEncodedRecord)
+  
+    # If -s then save encodings in CSV (final delivery / D7, not currently working)
     if argHandler.saveOption:
         clientEncoder.saveEncodings()
     else:
@@ -281,9 +306,9 @@ def main():
     
     if argHandler.dynamicLinkage:
         clientEncoder.continuousDynamicLinkage()
-    # Stays running, reading the csv file for updates
+        # Stays running, reading the csv file for updates
 
-    # Close the socket and program.
+    # Close the socket and program
     clientEncoder.soc.close()
     
 if __name__ == "__main__":

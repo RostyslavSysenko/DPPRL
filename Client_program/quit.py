@@ -1,6 +1,6 @@
 from ClientEncoder import FileEncoder
 from ClientEncoder import argumentHandler
-
+# Simple program to maunually close the server application if it is stuck running in the IDE.
 
 def main():
     argHandler = argumentHandler()
@@ -11,7 +11,7 @@ def main():
     attributeTypesList = argHandler.defineAttributeTypes()   
     encoder = FileEncoder(attributeTypesList, fileLocation)
     encoder.connectToServer(host, port) 
-    print("QUIT") 
+    print("QUITTING") 
     encoder.send("QUIT")
 
 if __name__ == "__main__":
