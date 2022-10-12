@@ -1,6 +1,6 @@
 #from IncrementalClusterInput import * 
 #import IncrementalClusterInput
-import hungarian_algorithm
+from hungarian_algorithm import algorithm
 import random
 import numpy as np
 

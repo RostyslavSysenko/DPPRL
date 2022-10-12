@@ -9,6 +9,8 @@ import socket
 import sys
 import json
 
+from Server_program.communication.client import client
+
 class FieldType(Enum):
     INT_ENCODED = 1
     STR_ENCODED = 2
@@ -99,23 +101,30 @@ class FileEncoder:
         # Extra functionality for product delivery
         pass
 
-    def sendEncodingsStatic(self):   
+    def sendEncodingsStatic(self, json=True):   
         # Send the encodings for static linkage
-        print("Sending dictionary key: ", self.fieldnames)
-        #self.send("KEY " + str(self.fieldnames))
         print("Sending encoded data")
-        for r in self.encodings:
-            # For each record, send as a static insert operation
-            cmd = "STATIC INSERT " + str(r)
-            self.send(cmd)
-            # Wait until server acknowledges record recieved before sending next one.         
-            AcknowledgedReceive = False
-            while not AcknowledgedReceive:                
-                rcvd = self.receives()
-                if rcvd.startswith("ACK"):
-                    AcknowledgedReceive = True
-                    
-        rcvd.send("SAVE") # Tell server to save the encodings after sending.          
+        if json == False: # Kept old functionality for debugging purposes.
+            for r in self.encodings:
+                cmd = "STATIC INSERT " + str(r)
+                self.send(cmd)
+                self.waitForAcknowledge()
+        else:
+            for r in self.jsonEncodings:
+                cmd = "STATIC INSERT " + str(r)
+                self.send(cmd)
+                self.waitForAcknowledge()
+        
+        # Each record is sent as a STATIC INSERT as static linkage does not account for UPDATE or DELETE operations.
+        self.send("SAVE") # Tell server to save the received encodings after finished sending.
+
+    def waitForAcknowledge(self):
+        # Wait until server acknowledges before continuing.        
+        AcknowledgedReceive = False
+        while not AcknowledgedReceive:                
+            rcvd = self.receives()
+            if rcvd.startswith("ACK"):
+                AcknowledgedReceive = True
 
     def continuousDynamicLinkage(self):
         # While True
@@ -245,7 +254,7 @@ class argumentHandler:
         attriTypeLocation = "./AttributeTypesList.txt"  
         f = open(attriTypeLocation, 'r')
         typesList = f.readline()
-        print("Use attribute types: ", typesList)
+        print("Use attribute types from", attriTypeLocation ," : ", typesList)
         self.attributeList = typesList.split(', ')
         for i in self.attributeList:   
             field = FieldType[i]
@@ -286,7 +295,7 @@ def main():
 
     for record in clientEncoder.recordDict:
         encodedAttributes = clientEncoder.encodeByAttribute(bf, record)
-        print(encodedAttributes)
+        #print(encodedAttributes)
         jsonEncodedRecord = clientEncoder.toJson(encodedAttributes)
         print(jsonEncodedRecord)
   
@@ -301,7 +310,9 @@ def main():
 
         # If static    
         clientEncoder.sendEncodingsStatic()
-        if argHandler.staticLink:
+        clientEncoder.waitForAcknowledge()
+
+        if argHandler.staticLink: # This is sent on third dataset for demonstration (-l)
             clientEncoder.send("STATIC LINK")
     
     if argHandler.dynamicLinkage:

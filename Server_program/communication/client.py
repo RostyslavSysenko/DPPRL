@@ -10,6 +10,7 @@ Attributes that we want to store per client
 import json
 import socket
 import sys, os
+from textwrap import indent
 
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
@@ -20,12 +21,12 @@ import server
 
 class client:
     # Each client is a data provider / unique dataset
-    def __init__(self, soc, address, connserver):   
+    def __init__(self, soc, address, connserver):
         # Check correct initialisers
         assert type(soc) == socket.socket 
-        # assert type(address) == tuple
-        assert type(connserver) == server
-
+        assert type(address) == tuple
+        # assert type(connserver) == server.Server # Type is actually __main__.Server ....
+    
         # Initialise values
         self.clientId = 0
         self.socket = soc
@@ -36,6 +37,7 @@ class client:
         # self.clusterlist = data_structures.ClusterList()
         self.jsonRecords = []
         self.jsonFileName = str(self.clientId) + "_records.json"
+        # print("New client with json filename: ", self.jsonFileName)
 
     def send(self, message):
         message = str(message)
@@ -74,9 +76,8 @@ class client:
                                           
         if rcvd.startswith("STATIC INSERT"):
             # Receive encoding into client's encodedRecords List.
-            splitRcvd = rcvd.split(" ")
-            rec = splitRcvd[2]
-            recJson = self.convertToJson(rec, self.dictKey)    
+            rec = rcvd.strip("STATIC INSERT ")
+            recJson = json.loads(rec)    
             print(recJson)  
             self.jsonRecords.append(recJson)
             #print(rec) # Debugging
@@ -84,7 +85,7 @@ class client:
             self.encodedRecords.append(#newRecord) 
             rec)                  
             # Acknowledge received so the client can continue. 
-            self.send(self.socket,"ACK")
+            self.send("ACK")
                                   
 
         if rcvd.startswith("DYNAMIC INSERT"):

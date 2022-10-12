@@ -21,9 +21,8 @@ class Server:
         self.selector = selectors.DefaultSelector()
         self.maxConnections = maxConnections
         self.connectedClients = [] # List of client objects
-        
         #self.clusterlist = Utilities.ClusterList()
-        #self.firstdatabase = [] # List of all bloom filters from first database.
+
     def shutdown(self):
         self.selector.close()
         self.server_socket.close()
@@ -73,14 +72,11 @@ class Server:
         # Create new client object            
         newClient = client.client(client_socket, client_addr, self)
         self.connectedClients.append(newClient)
-      
-            
 
     def launchServer(self, server_socket):
         # a forever loop until we interrupt it or an error occurs
         self.run = True        
         while self.run:
-            #print("Running") # Debugging
             events = self.selector.select(timeout=200)
             for key, mask in events:
                 if key.data is None:
@@ -132,10 +128,13 @@ class Server:
                 lowestAvailable = id
         return lowestAvailable
 
-    def doStaticLinkage(self):
-        # Perform hungarian algorithm on 3 inputs for starting point
-        # Default input is any/first 3 clients (temporary)
-        # Input should be all clients who have statically inserted.
+    def doStaticLinkage(self, json):
+        # Perform hungarian algorithm on 3 inputs
+
+        # Purpose of this function is for demonstration, we will be using first 3 
+        # databases as a staticly linked starting point then add 2 more dynamically
+
+        # Input should be all 3 clients records who have sent operation STATIC INSERT.
         foundDb = 0
         for clients in self.connectedClients:
             assert clients.encodedRecords != None
