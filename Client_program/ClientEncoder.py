@@ -5,7 +5,7 @@ from bitarray import bitarray
 import pickle # FOR CSV
 import socket
 import json
-from argHandler import argumentHandler
+import sys
 
 # Were these 2 added accidentally by vscode?
 from logging import exception
@@ -52,25 +52,28 @@ class FileEncoder:
         print("the socket has successfully connected to server")       
     
     def encodeByAttribute(self, bf, rec):       
-        # Running inside for record in dictionary loop
+        # Running inside a for record in dictionary loop
         encodedAttributesOfRow = []
         encodedRecord = ""
         # Populate encodedAttributesOfRow using the INT/STR attribute type key
         for attributeIdx in range(0, len(self.attributeTypesList)):
             currentAttribute = self.recordDict[rec][attributeIdx]
             encodedAttribute = None
-
+            attributeType = self.attributeTypesList[attributeIdx]
             # Use the input attributeTypesList to encode attributes accordingly.
-            if (self.attributeTypesList[attributeIdx] == FieldType.INT_ENCODED):
+            if attributeType == FieldType.INT_ENCODED:
                 numerical = int(currentAttribute)
                 intValueSet1, intValueSet2 = bf.convert_num_val_to_set(numerical, 0)  # 0 is a magic number
                 encodedAttribute = bf.set_to_bloom_filter(intValueSet1) 
-            if (self.attributeTypesList[attributeIdx] == FieldType.STR_ENCODED):
+            elif attributeType == FieldType.STR_ENCODED:
                 encodedAttribute = bf.set_to_bloom_filter(currentAttribute)
-            if (self.attributeTypesList[attributeIdx] == FieldType.NOT_ENCODED):
+            elif attributeType == FieldType.NOT_ENCODED:
                 encodedAttribute = currentAttribute
+            else:
+                print("FAILED TO ENCODE ATTRIBUTE: ", currentAttribute)
+                print("TRIED USING: ", attributeType)
 
-            assert encodedAttribute != None, encodedAttribute
+            assert encodedAttribute != None
             # Format as just a string of binary rather than including "bitarray()"
             formattedEncoding = str(encodedAttribute)
             formattedEncoding = formattedEncoding.strip("bitarray('')")
@@ -135,8 +138,7 @@ class FileEncoder:
     def nameAttributes(self, argHandler):
         # Populate self.attributeNames using input format: NOT_ENCODED, STR_ENCODED, STR_ENCODED, STR_ENCODED, INT_ENCODED
         attributeTypes = argHandler.attributeList
-        # Count instances of NOT/STR/INT
-        notCount = 0
+        # Count instances of STR/INT
         strCount = 0
         intCount = 0
 
@@ -145,24 +147,29 @@ class FileEncoder:
         count = 0
         for attribute in attributeTypes:
             attributeName = str(attribute)
-            if attribute == "NOT_ENCODED":
-                notCount += 1
-                count = notCount
-                attributeName = "RowId"
-            if attribute == "STR_ENCODED":
+            attributeId = False
+
+            # Determine which attribute, then decide how to name
+            if attribute == "NOT_ENCODED": # Only 1 value is not encoded so counting is not required (unique identifier)
+                attributeId = True
+                name = "rowId"
+            elif attribute == "STR_ENCODED":
                 strCount += 1
                 count = strCount
                 attributeName = "StringAttribute_"
-            if attribute == "INT_ENCODED":
+            elif attribute == "INT_ENCODED":
                 intCount += 1
                 count = intCount
                 attributeName = "IntegerAttribute_"
             else:
                 attribute.join("UNCLASSIFIED")
             
-            name = attributeName + str(count)
-            self.attributeNames.append(name)
-            index += 1
+            if attributeId:
+                self.attributeNames.append(name)
+            else:
+                name = attributeName + str(count)
+                self.attributeNames.append(name)
+                index += 1
 
         # Make names lowercase
         for attribute in self.attributeNames:
@@ -170,12 +177,16 @@ class FileEncoder:
 
     def toJson(self, attributes):
         # Using attributeNames array, assign each attribute to a json value.
-        thisRecordJson = {}
+        thisRecordJson = {"encodedAttributes":{}}
         index = 0
         for attribute in self.attributeNames:
             if index < len(attributes):
-                thisRecordJson[attribute] = attributes[index]
-                index += 1
+                if attribute == 'rowId':
+                    thisRecordJson[attribute] = attributes[index]
+                    index += 1
+                else:
+                    thisRecordJson["encodedAttributes"][attribute] = attributes[index]
+                    index += 1               
 
         thisRecordJson = json.dumps(thisRecordJson, indent=1)
         if type(thisRecordJson) == str: # JSON objects are stored as strings in python.
@@ -183,6 +194,89 @@ class FileEncoder:
         else:
             print("ERROR APPENDING JSON RECORD TO LIST")
         return thisRecordJson
+
+class argumentHandler:
+    def __init__(self):   
+        self.saveOption = False 
+        self.dynamicLinkage = False
+        self.staticLink = False
+        self.host = '127.0.0.1'
+        self.port = 43555
+        self.fileLocation = './datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv' 
+        self.attributeList = None
+    
+    def handleArguments(self):
+        argCount = len(sys.argv)
+        if argCount<2:
+            return 1
+        optionsExist = self.handleOptions()
+        if optionsExist & argCount<3:
+            return 1
+        try:
+            if optionsExist:
+                self.fileLocation = sys.argv[2]
+            elif sys.argv[1]: # If there are no options then the first parameter will be the file location
+                self.fileLocation = sys.argv[1]
+
+            # Find if there is a host argument
+            hostArgExists = False
+            lastArg = len(sys.argv) - 1
+            if optionsExist & argCount == 3:
+                hostArgExists = True         
+            
+            # If specified, set the host and port (otherwise use defaults)
+            if hostArgExists:
+                hostArg = sys.argv[lastArg]
+                hostArgSplit = hostArg.split(":")
+                self.host = hostArgSplit[0]
+                self.port = hostArgSplit[1]
+        except:
+            print('ClientEncoder.py -options FileToBeEncoded [...] host:port')
+            sys.exit(2)
+
+    def handleOptions(self):
+        isOptions = False
+        # Arg 1 - Options (optional)            
+        for arg in sys.argv:
+            if arg.startswith("-"):
+                optionArgument = arg
+                isOptions = True
+                # Handle options 
+                for char in optionArgument:
+                    # Options: s, l, d
+                    if char == "s":
+                        self.saveOption = True
+
+                    if char == "l":
+                        self.staticLink = True
+                        print("Doing static link")
+
+                    if char == "d":
+                        self.dynamicLinkage = True  
+        return isOptions
+
+    def defineAttributeTypes(self):
+        # Read a text file in format: NOT_ENCODED, STR_ENCODED, STR_ENCODED, STR_ENCODED, INT_ENCODED
+        # For a different dataset, modify "AttributeTypesList.txt" to your requirements
+        
+        attriTypeList = []
+        # Pass txt to a list of FieldTypes (and store self.attributeList for naming purposes)
+        attriTypeLocation = "./AttributeTypesList.txt"  
+        f = open(attriTypeLocation, 'r')
+        typesList = f.readline()
+        print("Use attribute types from", attriTypeLocation ," : ", typesList)
+        self.attributeList = typesList.split(', ')
+        for i in self.attributeList:   
+            field = FieldType[i]
+            attriTypeList.append(field)
+        
+        for i in attriTypeList:
+            assert type(i) == FieldType
+        assert type(attriTypeList) == list
+        return attriTypeList 
+
+    def findBloomFilterConfig(self):
+        pass
 
 
 def main():
@@ -248,3 +342,5 @@ def main():
     
 if __name__ == "__main__":
     main()
+
+

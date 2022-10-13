@@ -7,37 +7,35 @@ Attributes that we want to store per client
 5. database/dataset id
 6. dictionary of unencoded attributes
 """ 
+from ast import dump
 import json
 import socket
 import sys, os
-from textwrap import indent
+from clustering.DynamicClustering import DynamicClusterer
 
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 
 # Internal imports
 from centralDataStructure.Utilities import *
-import server
 
 class client:
     # Each client is a data provider / unique dataset
-    def __init__(self, soc, address, connserver):
+    def __init__(self, soc, address, connserver, clientIdentifier = 0):
         # Check correct initialisers
         assert type(soc) == socket.socket 
         assert type(address) == tuple
         # assert type(connserver) == server.Server # Type is actually __main__.Server ....
     
         # Initialise values
-        self.clientId = 0
+        self.clientId = clientIdentifier
         self.socket = soc
         self.address = address
         self.connectedServer = connserver
-        self.encodedRecords = [] # Using dictionary instead
-        self.dictKey = ['rec_id', 'first_name', 'last_name', 'city', 'zip_code'] # For debugging, receive as json instead.
-        # self.clusterlist = data_structures.ClusterList()
+        self.encodedRecords = [] # List of row objects? - currently redundant
         self.jsonRecords = []
         self.jsonFileName = str(self.clientId) + "_records.json"
-        # print("New client with json filename: ", self.jsonFileName)
+        print("New client with json filename: ", self.jsonFileName)
 
     def send(self, message):
         message = str(message)
@@ -56,23 +54,28 @@ class client:
         if rcvd.startswith("STATIC INSERT"):
             # Receive encoding into client's encodedRecords List.
             rec = rcvd.strip("STATIC INSERT ")
-            recJson = json.loads(rec)    
-            print(recJson)  
+            # Load as json to assign a value to DBId
+            recJson = json.loads(rec)
+            recJson["DBId"] = self.clientId
             self.jsonRecords.append(recJson)
-            #print(rec) # Debugging
-            #newRecord = Utilities.Row(rec)            
-            self.encodedRecords.append(#newRecord) 
-            rec)                  
+            dumpedJson = json.dumps(recJson)
+            newRecord = Row.parseFromJson(dumpedJson)       # ERROR     
+            self.encodedRecords.append(newRecord) 
+            #rec)                  
             # Acknowledge received so the client can continue. 
             self.send("ACK")
                                   
 
         if rcvd.startswith("DYNAMIC INSERT"):
             # Receive encoding
-            splitRcvd = rcvd.split(" ")
-            rec = splitRcvd[2]
-            recJson = self.convertToJson(rec, self.dictKey)    
-            print(recJson)           
+            rec = rcvd.strip("DYNAMIC INSERT ")
+            recJson = json.loads(rec)    
+            print(recJson)  
+            self.jsonRecords.append(recJson)
+
+
+            DynamicClusterer.findBestClusterForRow()
+                     
             #print(rec) # Debugging
             #newRecord = Utilities.Row.parseFromJson(recJson)
             # self.clusterlist.addRowDynamicNaive(newRecord)
@@ -85,22 +88,15 @@ class client:
 
         if rcvd.startswith("LIST"):
             for i in self.encodedRecords:
-                print(i)
-        
-        if rcvd.startswith("KEY"):
-            # Set the Dict -> JSON key for format conversion
-            self.dictKey = rcvd            
+                print(i)      
 
         if rcvd.startswith("STATIC LINK"):
             # To do: Controller client on server side that sends this command?
             print("Performing static linkage")
-            #self.connectedServer.doStaticLinkage()
+            self.connectedServer.doStaticLinkage()
             
         if rcvd.startswith("SAVE"):
-            # This functionality might be superceded by the QUIT command.
-            
-            # Move this line to reduce amount of writes to disk (especially important for HDD)
-            self.saveToJson() 
+            self.saveToJson() # Move this function call if needed to reduce amount of writes to disk (optimise)
             self.send("ACK") 
 
         # if rcvd.startswith("")

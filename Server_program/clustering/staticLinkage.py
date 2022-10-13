@@ -110,6 +110,7 @@ def staticLinkage(database1, database2, database3):
                 # iterate vertices in G (first party)
                 for c in G_ver :
                     # calculate similarity between first party records and other records
+                    # Not accounting for Row Object
                     sim_val = sim(int(rec),int(c))
                     if sim_val >= min_similarity_threshold:
                         # add edges - does not match exactly

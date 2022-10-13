@@ -15,7 +15,7 @@ class Row:
     def __init__(self,encodedStr: str, nonEncodedAttrubuteDict =None, rowId = None, DbId = None):
         self.encodedRowString = encodedStr # Encoded attributes separated by commas
         self.rowListRepresentation = [int(char) for char in encodedStr]
-        self.nonEncodedAttrubuteDict =nonEncodedAttrubuteDict
+        #self.nonEncodedAttrubuteDict =nonEncodedAttrubuteDict
 
         self.rowId =rowId
         self.DbId=DbId
@@ -36,17 +36,6 @@ class Row:
                     ... 
                     "encNamek" : ...
                 },
-            "nonEncodedAttributes" : 
-                {
-                    "weight" : 
-                        {
-                            "value" : "67" 
-                            "type"  : "4" #val is based on the Enum we defined
-                        },
-                    "attName2" : ...
-                    ...
-                    "attNamej" : ...
-                },
             "rowId" : "q",
             "DBId" : "z"
 
@@ -56,6 +45,7 @@ class Row:
         """
 
         # parse jsonStr into dictionary object:
+        assert type(jsonStr) == str
         jsonObj = json.loads(jsonStr)
 
         # creating encoded string
@@ -67,7 +57,7 @@ class Row:
                 DbId= jsonObj["DBId"],
                 rowId = jsonObj["rowId"],
                 encodedStr = encodedStr,
-                nonEncodedAttrubuteDict= jsonObj["nonEncodedAttributes"]
+                #nonEncodedAttrubuteDict= jsonObj["nonEncodedAttributes"]
                 )
         return row
 
