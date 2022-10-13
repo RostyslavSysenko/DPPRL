@@ -143,38 +143,52 @@ class Server:
         return id
 
 
-    def doStaticLinkage(self, json=False):
+    def doStaticLinkage(self, json=True):
         # Perform hungarian algorithm on 3 inputs
 
         # Purpose of this function is for demonstration, we will be using first 3 
         # databases as a staticly linked starting point then add 2 more dynamically
 
         # Input should be all 3 clients records who have sent operation STATIC INSERT.
+        foundDb = 0
+        dbs = []
         if json:
             for clients in self.connectedClients:
+                assert clients.jsonRecords != None
+                if foundDb < 3:
+                    staticRecord = self.staticLinkageFormatting(clients)
+                    dbs.append(staticRecord)
+                    foundDb += 1
                 # find 3 clients
                 # make a list of records that are stored as format [rowId, concatenated encodings]
                 # pass to db1/2/3 parameters
                 pass
         else:
-            foundDb = 0
             for clients in self.connectedClients:
                 assert clients.encodedRecords != None
-                if foundDb == 0:
-                    db1 = clients.encodedRecords
+                if foundDb < 3:
+                    dbs.append(clients.encodedRecords)
                     foundDb += 1
-                if foundDb == 1:
-                    db2 = clients.encodedRecords
-                    foundDb += 1
-                if foundDb == 2:
-                    db3 = clients.encodedRecords              
-            
+        
+        if len(dbs) > 3:
+            print("MORE THAN 3 DATABASES")
+            pass
 
         # Static linkage with 3 databases
-        staticLinkage.staticLinkage(db1, db2, db3)
+        staticLinkage.staticLinkage(dbs[0],dbs[1],dbs[2])
 
-    def staticLinkageFormatting(self):
-        pass
+    def staticLinkageFormatting(self, clientList):
+        staticRecord = []
+        print("Joining bloom filters")
+        # Create format [[rowId, encodedAttributes],[rowId, encodedAttributes], [rowId, encodedAttributes], ... ]
+        for record in clientList.jsonRecords:
+            staticRecord.append(record["rowId"])
+            concatBloomFilter = ""
+            for attribute in record["encodedAttributes"]:
+                concatBloomFilter.join(attribute)            
+            staticRecord.append(concatBloomFilter)
+        print(staticRecord)
+        return staticRecord
 
     def doDynamicLinkage(self):
         # Update clusters

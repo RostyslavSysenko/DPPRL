@@ -57,11 +57,11 @@ class client:
             # Load as json to assign a value to DBId
             recJson = json.loads(rec)
             recJson["DBId"] = self.clientId
+
             self.jsonRecords.append(recJson)
             dumpedJson = json.dumps(recJson)
-            newRecord = Row.parseFromJson(dumpedJson)       # ERROR     
-            self.encodedRecords.append(newRecord) 
-            #rec)                  
+            newRecord = Row.parseFromJson(dumpedJson)    
+            self.encodedRecords.append(newRecord)                
             # Acknowledge received so the client can continue. 
             self.send("ACK")
                                   
