@@ -16,7 +16,7 @@ class Row:
     def __init__(self,encodedStr: str, nonEncodedAttrubuteDict =None, rowId = None, DbId = None):
         self.encodedRowString = encodedStr # "010010101010" , we assume that attribtue encodings are concated and all are of same length
         self.rowListRepresentation = [int(char) for char in encodedStr] # [0,1,0,0,..0]
-        self.nonEncodedAttrubuteDict =nonEncodedAttrubuteDict # weight -> 67, 
+        #self.nonEncodedAttrubuteDict =nonEncodedAttrubuteDict # weight -> 67, 
 
         self.rowId =rowId
         self.DbId=DbId
@@ -56,8 +56,8 @@ class Row:
         row = Row(
                 DbId= jsonObj["DBId"],
                 rowId = jsonObj["rowId"],
-                encodedStr = encodedStr,
-                nonEncodedAttrubuteDict= jsonObj["nonEncodedAttributes"]
+                encodedStr = encodedStr#,
+                #nonEncodedAttrubuteDict= jsonObj["nonEncodedAttributes"]
                 )
         return row
 
@@ -66,8 +66,8 @@ class Row:
         idStr = "id: " + str(self.rowId) + "\n"
         dbStr = "db: " + str(self.DbId) + "\n"
         encStr = "enc Attrs: " + str(self.encodedRowString) + "\n"
-        nonEncStr = "nonEnc Attrs: " + str(self.nonEncodedAttrubuteDict) + "\n"
-        return sep + idStr + dbStr + encStr + nonEncStr
+        #nonEncStr = "nonEnc Attrs: " + str(self.nonEncodedAttrubuteDict) + "\n"
+        return sep + idStr + dbStr + encStr #+ nonEncStr
 
 
 class Cluster:

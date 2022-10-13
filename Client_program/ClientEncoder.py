@@ -49,7 +49,7 @@ class FileEncoder:
 
         # connecting to the server
         self.soc.connect((self.host, self.port))
-        print("the socket has successfully connected to server")       
+        print("the socket has successfully connected to server via port ", self.port)       
     
     def encodeByAttribute(self, bf, rec):       
         # Running inside a for record in dictionary loop
@@ -90,7 +90,7 @@ class FileEncoder:
     def display(self, headRowNumber):
         # headRowNumber is the number of rows starting from the top
         for i in range(0, headRowNumber):
-            print(self.encodings[i])
+            print(self.jsonEncodings[i])
 
     def saveEncodings(self): # NOT WORKING
         # save self.encodings (list of encoded records stored as strings)
@@ -200,23 +200,27 @@ class argumentHandler:
         self.saveOption = False 
         self.dynamicLinkage = False
         self.staticLink = False
-        self.host = '127.0.0.1'
-        self.port = 43555
-        self.fileLocation = './datasets_synthetic/ncvr_numrec_5000_modrec_2_ocp_0_myp_0_nump_5.csv' 
+        self.host = '127.0.0.1' # Localhost
+        self.port = 43555 # Default, can be specified
+        self.fileLocation = '' 
         self.attributeList = None
     
     def handleArguments(self):
-        argCount = len(sys.argv)
-        if argCount<2:
-            return 1
+        argCount = len(sys.argv)        
         optionsExist = self.handleOptions()
-        if optionsExist & argCount<3:
-            return 1
+        if optionsExist:
+            if argCount<3:
+                print('Incorrect number of arguments when specifying options')
+                sys.exit(1)
+        elif argCount < 2:
+            print('Requires file path, please specify the csv to be encoded')
+            sys.exit(1)
         try:
             if optionsExist:
                 self.fileLocation = sys.argv[2]
             elif sys.argv[1]: # If there are no options then the first parameter will be the file location
                 self.fileLocation = sys.argv[1]
+            print("FileLocation:", self.fileLocation)
 
             # Find if there is a host argument
             hostArgExists = False
@@ -239,6 +243,7 @@ class argumentHandler:
         # Arg 1 - Options (optional)            
         for arg in sys.argv:
             if arg.startswith("-"):
+                print("Found options argument: ", arg)
                 optionArgument = arg
                 isOptions = True
                 # Handle options 
@@ -249,7 +254,6 @@ class argumentHandler:
 
                     if char == "l":
                         self.staticLink = True
-                        print("Doing static link")
 
                     if char == "d":
                         self.dynamicLinkage = True  
@@ -312,7 +316,7 @@ def main():
         encodedAttributes = clientEncoder.encodeByAttribute(bf, record)
         #print(encodedAttributes)
         jsonEncodedRecord = clientEncoder.toJson(encodedAttributes)
-        print(jsonEncodedRecord)
+        #print(jsonEncodedRecord)
 
     
     # If -s then save encodings in CSV (final delivery / D7, not currently working)

@@ -44,7 +44,7 @@ class graph:
         return edgename
     
     def addVertex(self, vrtx):
-        if vrtx not in self.gdict:
+        if vrtx not in self.gdict: # Error, unhashable type 'dict'
             self.gdict[vrtx] = []
     
     def pruneVertex(self, vrtx):
@@ -53,12 +53,15 @@ class graph:
             
     # Add the new edge
     def AddEdge(self, edge):
-        edge = set(edge)
-        (vrtx1, vrtx2) = edge
-        if vrtx1 in self.gdict:
-            self.gdict[vrtx1].append(vrtx2)
+        assert edge == set(edge)
+        if len(edge) < 2:
+            pass
         else:
-            self.gdict[vrtx1] = [vrtx2]
+            (vrtx1, vrtx2) = edge
+            if vrtx1 in self.gdict:
+                self.gdict[vrtx1].append(vrtx2)
+            else:
+                self.gdict[vrtx1] = [vrtx2]
             
 
 def staticLinkage(database1, database2, database3): 

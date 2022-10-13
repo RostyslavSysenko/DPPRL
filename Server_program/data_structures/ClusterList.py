@@ -14,7 +14,7 @@ class ClusterList:
         self.clusterList = []
         self.clusterAggregations = []; # 2d array of clusters and each cluster array contains 0/1 bit encodings
 
-        self.indexer = Indexer(indexingBitStart, indexingBitEnd)
+        #self.indexer = Indexer(indexingBitStart, indexingBitEnd)
 
     def __addNewClusterToClusterList(self,clusterObj):
         # insertion

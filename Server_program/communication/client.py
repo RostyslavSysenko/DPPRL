@@ -17,7 +17,7 @@ parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 
 # Internal imports
-from centralDataStructure.Utilities import *
+from data_structures.Utilities import *
 
 class client:
     # Each client is a data provider / unique dataset

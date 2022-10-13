@@ -156,8 +156,8 @@ class Server:
             for clients in self.connectedClients:
                 assert clients.jsonRecords != None
                 if foundDb < 3:
-                    staticRecord = self.staticLinkageFormatting(clients)
-                    dbs.append(staticRecord)
+                    staticRecordList = self.staticLinkageFormatting(clients)
+                    dbs.append(staticRecordList)
                     foundDb += 1
                 # find 3 clients
                 # make a list of records that are stored as format [rowId, concatenated encodings]
@@ -177,18 +177,27 @@ class Server:
         # Static linkage with 3 databases
         staticLinkage.staticLinkage(dbs[0],dbs[1],dbs[2])
 
-    def staticLinkageFormatting(self, clientList):
-        staticRecord = []
-        print("Joining bloom filters")
-        # Create format [[rowId, encodedAttributes],[rowId, encodedAttributes], [rowId, encodedAttributes], ... ]
-        for record in clientList.jsonRecords:
-            staticRecord.append(record["rowId"])
-            concatBloomFilter = ""
-            for attribute in record["encodedAttributes"]:
-                concatBloomFilter.join(attribute)            
-            staticRecord.append(concatBloomFilter)
-        print(staticRecord)
-        return staticRecord
+    def staticLinkageFormatting(self, clientObj, force=False):       
+        # Check if formatting is required first.
+        formatRequired = True
+
+
+        if formatRequired:
+            print("Joining bloom filters")
+            staticRecords = {}
+            # Create format [[rowId, encodedAttributes],[rowId, encodedAttributes], [rowId, encodedAttributes], ... ]
+            for record in clientObj.jsonRecords:
+                staticRecord = []
+                staticRecord.append(record["rowId"]) # Field 1
+                concatBloomFilters = "".join(list(record["encodedAttributes"].values())) 
+                staticRecord.append(concatBloomFilters) # Field 2
+
+                staticRecordDict = {}
+                staticRecordDict[staticRecord[0]] = staticRecord[1]
+
+                staticRecords.update(staticRecordDict) # Add to 'dbs'
+                #print(staticRecord)
+            return staticRecords
 
     def doDynamicLinkage(self):
         # Update clusters
