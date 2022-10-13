@@ -10,12 +10,13 @@ class Operation(Enum):
     INSERT = 1
     DELETE = 2
 
+
 class Row:
     # non modifiable currently
     def __init__(self,encodedStr: str, nonEncodedAttrubuteDict =None, rowId = None, DbId = None):
-        self.encodedRowString = encodedStr
-        self.rowListRepresentation = [int(char) for char in encodedStr]
-        self.nonEncodedAttrubuteDict =nonEncodedAttrubuteDict
+        self.encodedRowString = encodedStr # "010010101010" , we assume that attribtue encodings are concated and all are of same length
+        self.rowListRepresentation = [int(char) for char in encodedStr] # [0,1,0,0,..0]
+        self.nonEncodedAttrubuteDict =nonEncodedAttrubuteDict # weight -> 67, 
 
         self.rowId =rowId
         self.DbId=DbId
@@ -31,21 +32,10 @@ class Row:
 
             "encodedAttributes" : 
                 {
-                    "DOB" : "01000101010100111",
+                    "DOB" : "01000101010100111", #10-20-2013
                     "encName2" : ...
                     ... 
                     "encNamek" : ...
-                },
-            "nonEncodedAttributes" : 
-                {
-                    "weight" : 
-                        {
-                            "value" : "67" 
-                            "type"  : "4" #val is based on the Enum we defined
-                        },
-                    "attName2" : ...
-                    ...
-                    "attNamej" : ...
                 },
             "rowId" : "q",
             "DBId" : "z"
@@ -85,8 +75,8 @@ class Cluster:
         self.__clusterId = id
         self.__parentClusterListObj = None
 
-        self.__clusterRowObjLst = []
-        self.__clusterVecAggr = []
+        self.__clusterRowObjLst = [] # [RowObj1,RowObj2...]
+        self.__clusterVecAggr = [] # [0.04,0.5,1...]
 
     def __clusterDoesntBelongToClustList(self):
         return self.__parentClusterListObj == None

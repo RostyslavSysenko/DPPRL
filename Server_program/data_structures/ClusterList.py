@@ -3,7 +3,7 @@ import os, sys
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.Utilities import *
-from data_structures.Indexer import *
+#from data_structures.Indexer import *
 from clustering.DynamicClustering import *
 
 class ClusterList:
@@ -14,7 +14,7 @@ class ClusterList:
         self.clusterList = []
         self.clusterAggregations = []; # 2d array of clusters and each cluster array contains 0/1 bit encodings
 
-        self.indexer = Indexer(indexingBitStart, indexingBitEnd)
+        #self.indexer = Indexer(indexingBitStart, indexingBitEnd)
 
     def __addNewClusterToClusterList(self,clusterObj):
         # insertion
@@ -35,11 +35,6 @@ class ClusterList:
     def updateRowDynamically(self, idx, dbIdx, row,  blockingTurnedOn=False):
         pass
 
-
-    def deleteRowDynamically(self, idx, dbIdx, row,  blockingTurnedOn=False):
-        pass
-
-    
     def addRowDynamic(self, row, blockingTurnedOn=False):
         # this is an implimentation of dynamic linkage which refits the model every time a dynamic linkage is needed and then finds 1 NN based on that newly created model
         # we assume the order of clusers never changes (meaning clusters are never deleted or reordered)
