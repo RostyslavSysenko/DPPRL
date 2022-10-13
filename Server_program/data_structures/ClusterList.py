@@ -31,10 +31,6 @@ class ClusterList:
         # assign and increment index
         self.__addNewClusterToClusterList(clusterObj)
 
-
-    def updateRowDynamically(self, idx, dbIdx, row,  blockingTurnedOn=False):
-        pass
-
     def addRowDynamic(self, row, blockingTurnedOn=False):
         # this is an implimentation of dynamic linkage which refits the model every time a dynamic linkage is needed and then finds 1 NN based on that newly created model
         # we assume the order of clusers never changes (meaning clusters are never deleted or reordered)

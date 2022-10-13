@@ -285,7 +285,7 @@ from data_structures.Indixer import *
 
 
 
-# # TEST 6.2 (automated)
+# # TEST 6.2 (automated) passed on 13 of october
 # insertRow2 = Row("101010101010")
 # indixer.updateIndexingDictOnInsert(insertedRow=insertRow2)
 
@@ -297,7 +297,7 @@ from data_structures.Indixer import *
 
 
 
-# # TEST 6.3 (automated)
+# # TEST 6.3 (automated) passed on 13 oct
 # insertRow3 = Row("101010101111")
 # indixer.updateIndexingDictOnInsert(insertedRow=insertRow3)
 
@@ -306,3 +306,94 @@ from data_structures.Indixer import *
 
 # # the automated test case
 # assert sorted(lst_got,key=comparisonAttributeFunction) == sorted(lst_test,key=comparisonAttributeFunction)
+
+
+
+
+
+
+# # Test 7 - (automated) - checking whether a map from list or rows to list of clusters those rows belong to work apropriately
+
+# # setting up clusters
+# c0 = Cluster()
+# row1=Row("111100000000")
+# c0.addOneRowToCluster(row1) 
+
+# c1 = Cluster() 
+# row2 = Row("000011110000")
+# c1.addOneRowToCluster(row2)
+
+# c2 = Cluster() 
+# row3 = Row("010101010000")
+# c2.addOneRowToCluster(row3)
+
+# # checking whether 
+
+# ListOfAttribute_OrderTupples = list()
+# ListOfAttribute_OrderTupples.append(("zipCode",0))
+# ListOfAttribute_OrderTupples.append(("City",1))
+
+# indixer = Indexer(bitsPerAttribute = 4, ListOfAttribute_OrderTupples = ListOfAttribute_OrderTupples)
+# indixer.initialIndexBuild(rowList=[row1,row2,row3])
+
+# comparisonAttributeFunction = lambda cluster: cluster.getClusterListRepresentation()
+
+# # TEST 7.1
+# clusterLst1 = indixer.getClustersWithAtLeast1RowWithSameKey(Row("000000001111"))
+
+# test1 = [c0,c1]
+
+
+# # the automated test case
+# assert sorted(clusterLst1,key=comparisonAttributeFunction) == sorted(test1,key=comparisonAttributeFunction)
+
+
+
+# # TEST 7.2
+# clusterLst2 = indixer.getClustersWithAtLeast1RowWithSameKey(Row("101010101010"))
+
+# test2 = []
+
+# # the automated test case
+# assert sorted(clusterLst2,key=comparisonAttributeFunction) == sorted(test2,key=comparisonAttributeFunction)
+
+
+
+# # TEST 7.3 (automated) passed 13 oct 
+# clusterLst3 = indixer.getClustersWithAtLeast1RowWithSameKey(Row("010110100000"))
+
+# test3 = [c2]
+
+# # the automated test case
+# assert sorted(clusterLst3,key=comparisonAttributeFunction) == sorted(test3,key=comparisonAttributeFunction)
+
+# # test 7.4
+
+# clusterLst4 = indixer.getClustersWithAtLeast1RowWithSameKey(Row("010110100000"))
+
+# test4 = [c2,c1]
+
+# # the automated test case
+# assert sorted(clusterLst4,key=comparisonAttributeFunction) != sorted(test4,key=comparisonAttributeFunction)
+
+# # test 7.5
+
+# clusterLst5 = indixer.getClustersWithAtLeast1RowWithSameKey(Row("111110100000"))
+
+# test5 = [c0]
+
+# # the automated test case
+# assert sorted(clusterLst5,key=comparisonAttributeFunction) == sorted(test5,key=comparisonAttributeFunction)
+
+
+# # test 7.6
+
+# clusterLst6 = indixer.getClustersWithAtLeast1RowWithSameKey(Row("111110100000"))
+
+# test6 = [c2]
+
+# # the automated test case
+# assert sorted(clusterLst6,key=comparisonAttributeFunction) != sorted(test6,key=comparisonAttributeFunction)
+
+
+

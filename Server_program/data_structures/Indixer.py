@@ -66,9 +66,18 @@ class Indexer:
 
                 union = setAllRows.union(setRowCurr)
                 allRows = list(union)
-        
         return allRows
 
+    def getClustersWithAtLeast1RowWithSameKey(self, row):
+        rowList = self.getRowsWithAtLeast1SameKey(row)
+
+        clusterSet = set()
+
+        for row in rowList:
+            cluster = row.clusterRef 
+            clusterSet.add(cluster)
+        
+        return list(clusterSet)
 
     def updateIndexingDictOnInsert(self,insertedRow):
         # pre-condition: assumes that indexing dictionaries had already been built

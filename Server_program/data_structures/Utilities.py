@@ -81,6 +81,9 @@ class Cluster:
     def __clusterDoesntBelongToClustList(self):
         return self.__parentClusterListObj == None
 
+    def getClusterRowObjList(self):
+        return self.__clusterRowObjLst
+
     def getNumberOfStoredRows(self):
         return len(self.__clusterRowObjLst)
 
@@ -146,10 +149,10 @@ class Cluster:
         return self.__clusterId
 
     def addOneRowToCluster(self, row):
+        row.clusterRef = self
         self.__clusterRowObjLst.append(row) # updating the row list
         # updating the cluster representation
 
-        row.clusterRef = self # update row refference to the cluster
         self.__handleAggregation()
 
     def __handleAggregation(self):
