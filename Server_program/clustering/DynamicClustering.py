@@ -14,7 +14,6 @@ class DynamicClusterer:
         if(blockingTurnedOn):
             if(indexer.indexingHasNotBeenDoneYet()):
                 indexer.initialIndexBuild()
-            indexingKey = indexer.getIndexingKey()
         
         knn_classifier = NearestNeighbors(n_neighbors=2, metric="cosine")
 
@@ -22,7 +21,7 @@ class DynamicClusterer:
             knn_classifier.fit(clusterAggregations) # fit the model based on the whole data
         else: # else if indexing is enabled
             assert indexer.indexingHasNotBeenDoneYet(), "indexing not done"
-            indexedClusterAggregations = indexer.indexingDictionary[indexingKey]
+            indexedClusterAggregations = indexer.getClustersWithAtLeast1RowWithSameKey(row)
             knn_classifier.fit(indexedClusterAggregations) #fit the model based on subset of data
 
         distance_mat, neighbours_vec = knn_classifier.kneighbors([row.rowListRepresentation])
