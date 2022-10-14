@@ -7,6 +7,22 @@ from data_structures.Indixer import * # Indexer
 from data_structures.ClusterList import * # Indexer
 
 class ClusterList:
+    """
+    Guide on how to use this class:
+    - this class is to be used inside the server program on a linkage unit
+    - this class needs to be instantiated once only and will contain the linkage for records across all databases
+    - when using this class, a user would usually want to instantiate an Indexer object from a class that we provided
+    and pass it into ClusterList since doing so would allow would allow for multi stage indexing and hopefully good speed up on the linkage
+    - Note: clusterList can be used without Indexer and will work just fine, it will just usually be slower, but linkage might be improved
+    in quality.
+    - After cluster list is created, the cluster list would need to be populated statically using addClusterStaticly(clusterObj) function.
+    Please note that to populate the clusterList, user needs to already have a set of clusters and rows corresponding to those clusters.
+    This set of clusters with corresponding rows can be generated using our static linkage module (created by Amanda). Then those generated
+    clusters and lists need to be converted into appropriate format and inserted into cluster list one by one using addClusterStaticly(clusterObj). 
+    The use case for that function can be found inside the testing file for data structures 
+    - then once the clusterList is set up we could insert rows dynamically into it using addRowDynamic(row) which would do the insertion
+    - use cases of how cluster list can be used can be found inside the testing folder (tests make extensive use of both clusterList and Indexer classes)
+    """
     def __init__(self, certaintyThreshold = 0.5,clusterAggrFunction = AggrFunct.MEAN,indexer = None):
         '''
         Indexer: when ClusterList is created, if indexer is passed as input then dynamic insertion will be done using the indexer.
@@ -44,6 +60,12 @@ class ClusterList:
         self.clusterAggregations[clusterIdxToWhichWeAdd] = self.clusterList[clusterIdxToWhichWeAdd].getClusterListRepresentation()
 
     def addClusterStaticly(self,clusterObj):
+        """
+        input: valid Cluster object (class for cluster can be found inside the Utilities folder i think). The cluster should have at least one 
+        row in it already, else it doesnt make sense to have empty cluster
+        
+        output: the output is that a cluster gets integrated into a cluster list at latest index (i think)
+        """
         # assign and increment index
         self.__addNewClusterToClusterList(clusterObj)
 
@@ -62,9 +84,15 @@ class ClusterList:
         return rowList
 
     def addRowDynamic(self, row):
-        # this is an implimentation of dynamic linkage which refits the model every time a dynamic linkage is needed and then finds 1 NN based on that newly created model
-        # we assume the order of clusers never changes (meaning clusters are never deleted or reordered)
+        """ 
+        input: Row object (which is found in Utilities folder i think)
+
+        output: nothing gets printed or returned and instead the row gets integrated into the ClusterList data structure
+
+        More info: this is an implimentation of dynamic linkage which refits the model every time a dynamic linkage is needed and then finds 1 NN based on that newly created model
+        we assume the order of clusers never changes (meaning clusters are never deleted or reordered)
         from clustering.DynamicClustering import DynamicClusterer
+        """
 
         if(self.blockingTurnedOn() and self.__indexer.indexingHasNotBeenDoneYet()):
             rowList = self.__generateRowList()

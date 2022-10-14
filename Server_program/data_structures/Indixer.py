@@ -1,4 +1,12 @@
 class Indexer:
+    """
+    this class is used to help with speed of clustering, by blocking out rows/cluster that we dont believe are relevant
+
+    assumptions: we assume that each attribute takes exact same number of blume filter bits
+
+    inputs: number of bits allocated for each attribute and a list of attributeName-order tupples. For example, look into the testing doc 
+    for data structures
+    """
     def __init__(self,bitsPerAttribute, ListOfAttribute_OrderTupples):
         self.listOfInxedDictionaries = []
         self.listofIndexedAttributeNames = []
