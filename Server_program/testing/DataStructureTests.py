@@ -12,59 +12,59 @@ from data_structures.Indixer import *
 
 # TEST SET 1: some tests on mean vectors (Ross)
 
-# # TEST SET 1.1: cluster class and static insertion, mean vector aggr (passed on 20 sep and before)
-# cList = ClusterList()
+# TEST SET 1.1: cluster class and static insertion, mean vector aggr (passed on 20 sep and before)
+cList = ClusterList()
 
-# nonEncodedDict = dict()
-# nonEncodedDict["name"] = "John"
+nonEncodedDict = dict()
+nonEncodedDict["name"] = "John"
 
-# c0 = Cluster() # the true bit string is 1101
-# c0.addOneRowToCluster(Row(encodedStr="1101",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1)) 
-# c0.addOneRowToCluster(Row("1100",nonEncodedAttrubuteDict=nonEncodedDict,rowId=2,DbId=1))
-# c0.addOneRowToCluster(Row("1101",nonEncodedAttrubuteDict=nonEncodedDict,rowId=3,DbId=1))
-# c0.addOneRowToCluster(Row("1101",nonEncodedAttrubuteDict=nonEncodedDict,rowId=4,DbId=1))
+c0 = Cluster() # the true bit string is 1101
+c0.addOneRowToCluster(Row(encodedStr="1101",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1)) 
+c0.addOneRowToCluster(Row("1100",nonEncodedAttrubuteDict=nonEncodedDict,rowId=2,DbId=1))
+c0.addOneRowToCluster(Row("1101",nonEncodedAttrubuteDict=nonEncodedDict,rowId=3,DbId=1))
+c0.addOneRowToCluster(Row("1101",nonEncodedAttrubuteDict=nonEncodedDict,rowId=4,DbId=1))
 
-# print(c0)
+print(c0)
 
-# c1 = Cluster() # the true bit string is 1111
-# c1.addOneRowToCluster(Row("1111",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=2))
-# c1.addOneRowToCluster(Row("1111",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=3))
-# c1.addOneRowToCluster(Row("1101",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=4))
-# c1.addOneRowToCluster(Row("1111",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=5))
+c1 = Cluster() # the true bit string is 1111
+c1.addOneRowToCluster(Row("1111",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=2))
+c1.addOneRowToCluster(Row("1111",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=3))
+c1.addOneRowToCluster(Row("1101",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=4))
+c1.addOneRowToCluster(Row("1111",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=5))
 
-# print(c1)
+print(c1)
 
-# c2 = Cluster() # the true bit string is 0011
-# c2.addOneRowToCluster(Row("0011",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1))
-# c2.addOneRowToCluster(Row("0011",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1))
-# c2.addOneRowToCluster(Row("0011",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1))
-# c2.addOneRowToCluster(Row("0011",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1))
+c2 = Cluster() # the true bit string is 0011
+c2.addOneRowToCluster(Row("0011",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1))
+c2.addOneRowToCluster(Row("0011",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1))
+c2.addOneRowToCluster(Row("0011",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1))
+c2.addOneRowToCluster(Row("0011",nonEncodedAttrubuteDict=nonEncodedDict,rowId=1,DbId=1))
 
-# cList.addClusterStaticly(c0)
+cList.addClusterStaticly(c0)
 
-# print(cList)
+print(cList)
 
-# cList.addClusterStaticly(c1)
+cList.addClusterStaticly(c1)
 
-# print(cList)
+print(cList)
 
-# cList.addClusterStaticly(c2)
+cList.addClusterStaticly(c2)
 
-# print(cList)
+print(cList)
 
-# #TEST SET 1.2: cluster class and dynamic insertion, mean vector aggr
+#TEST SET 1.2: cluster class and dynamic insertion, mean vector aggr
 
-# rowForDynamicInsertion = Row("1111")
-# cList.addRowDynamic(rowForDynamicInsertion)
+rowForDynamicInsertion = Row("1111")
+cList.addRowDynamic(rowForDynamicInsertion)
 
-# print(cList)
+print(cList)
 
-# rowForDynamicInsertion = Row("0011")
-# cList.addRowDynamic(rowForDynamicInsertion)
+rowForDynamicInsertion = Row("0011")
+cList.addRowDynamic(rowForDynamicInsertion)
 
-# print(cList)
+print(cList)
 
-# # All tests in TEST1 are behaving apropriately on current version of code (pushed on 20 sep 6:07pm)
+# All tests in TEST1 are behaving apropriately on current version of code (pushed on 20 sep 6:07pm)
 
 
 
@@ -396,4 +396,54 @@ from data_structures.Indixer import *
 # assert sorted(clusterLst6,key=comparisonAttributeFunction) != sorted(test6,key=comparisonAttributeFunction)
 
 
+
+
+
+
+
+# ## Test 8 (automated) - checking whether indexer is working correctly when integrated with cluster list (tests passed on 14 oct by Ross)
+
+# ListOfAttribute_OrderTupples = list()
+# ListOfAttribute_OrderTupples.append(("zipCode",0))
+# ListOfAttribute_OrderTupples.append(("City",1))
+
+# Idxer = Indexer(bitsPerAttribute= 4,ListOfAttribute_OrderTupples=ListOfAttribute_OrderTupples)
+# cList_w_blocking = ClusterList(certaintyThreshold = 0.5,clusterAggrFunction = AggrFunct.MEAN,indexer = Idxer)
+
+# c0 = Cluster() # the true bit string is 00000000
+# c0.addOneRowToCluster(Row(encodedStr="00000010",rowId=1,DbId=1)) 
+# c0.addOneRowToCluster(Row("00000000",rowId=2,DbId=1))
+
+# c1 = Cluster() # the true bit string is 11111111
+# c1.addOneRowToCluster(Row("11111111",rowId=1,DbId=2))
+# c1.addOneRowToCluster(Row("11111111",rowId=1,DbId=3))
+
+# c2 = Cluster() # the true bit string is 11110000
+# c2.addOneRowToCluster(Row("11110000",rowId=1,DbId=1))
+# c2.addOneRowToCluster(Row("11110000",rowId=1,DbId=2))
+
+# cList_w_blocking.addClusterStaticly(c0)
+# cList_w_blocking.addClusterStaticly(c1)
+# cList_w_blocking.addClusterStaticly(c2)
+
+# #TEST SET 8.1: (automated)
+
+# # # we expect that insertion will be made into the cluster0 since it is most similar and it has common 
+# # # indexing key with our added row. This test should work with any aggregation metric
+# cList_w_blocking.addRowDynamic(Row("10000000"))
+# assert c0.getNumberOfStoredRows()==2 and c1.getNumberOfStoredRows()==2 and c2.getNumberOfStoredRows()==3, "Err1. cluster state is as follows: " + str(cList_w_blocking)
+
+# #TEST SET 8.2: (automated)
+# cList_w_blocking.addRowDynamic(Row("11111111"))
+# # cossim(1,1,1,1,1,1,1,1 and 1,1,1,1,1,1,1,1)=1 -> winner
+# # cossim(1,1,1,1,1,1,1,1 and 1.0, 0.67, 0.67, 0.67, 0.0, 0.0, 0.0, 0.0)= 3.01/sqrt(8*2.35)=0.69
+# # the other cluster is not a winner
+# assert c0.getNumberOfStoredRows()==2 and c1.getNumberOfStoredRows()==3 and c2.getNumberOfStoredRows()==3, "Err2. cluster state is as follows: " + str(cList_w_blocking)
+
+# #TEST SET 8.3: (automated)
+# cList_w_blocking.addRowDynamic(Row("11110000"))
+# # cossim(1,1,1,1,0,0,0,0 and 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0) = 0/sqrt(2)=0
+# # cossim(1,1,1,1,0,0,0,0 and .0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0) = 3/sqrt(4*7)=0.57
+# # cossim(1,1,1,1,0,0,0,0 and 1.0, 0.67, 0.67, 0.67, 0.0, 0.0, 0.0, 0.0) = 2.8/sqrt(4*2.35)=0.913
+# assert c0.getNumberOfStoredRows()==2 and c1.getNumberOfStoredRows()==3 and c2.getNumberOfStoredRows()==4, "Err2. cluster state is as follows: " + str(cList_w_blocking)
 

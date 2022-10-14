@@ -30,7 +30,7 @@ class Indexer:
         return row.encodedRowString[idxStart:idxEnd]
 
     def indexingHasNotBeenDoneYet(self):
-        return len(self.indexingDictionary) == 0
+        return len(self.listOfInxedDictionaries) == 0 # there are 0 indexing dictionaries that we have built so far
 
     def initialIndexBuild(self,rowList):
         # out: nothing gets returned since the fucntion just updates the data structure
