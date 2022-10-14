@@ -5,6 +5,7 @@ sys.path.append(parentdir)
 from data_structures.Utilities import *
 from data_structures.Indixer import * # Indexer
 from data_structures.ClusterList import * # Indexer
+from clustering.DynamicClustering import *
 
 class ClusterList:
     """

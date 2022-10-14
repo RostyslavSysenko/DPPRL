@@ -1,0 +1,3 @@
+*.json
+./Server_program/*.json
+.\Server_program\*.json

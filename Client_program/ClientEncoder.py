@@ -6,10 +6,7 @@ import pickle # FOR CSV
 import socket
 import json
 import sys
-
-# Were these 2 added accidentally by vscode?
-from logging import exception
-from mimetypes import init
+from argumentHandler import argumentHandler
 
 class FieldType(Enum):
     INT_ENCODED = 1
@@ -61,17 +58,17 @@ class FileEncoder:
             encodedAttribute = None
             attributeType = self.attributeTypesList[attributeIdx]
             # Use the input attributeTypesList to encode attributes accordingly.
-            if attributeType == FieldType.INT_ENCODED:
+            if attributeType.name == "INT_ENCODED":
                 numerical = int(currentAttribute)
                 intValueSet1, intValueSet2 = bf.convert_num_val_to_set(numerical, 0)  # 0 is a magic number
                 encodedAttribute = bf.set_to_bloom_filter(intValueSet1) 
-            elif attributeType == FieldType.STR_ENCODED:
+            elif attributeType.name == "STR_ENCODED":
                 encodedAttribute = bf.set_to_bloom_filter(currentAttribute)
-            elif attributeType == FieldType.NOT_ENCODED:
+            elif attributeType.name == "NOT_ENCODED":
                 encodedAttribute = currentAttribute
             else:
                 print("FAILED TO ENCODE ATTRIBUTE: ", currentAttribute)
-                print("TRIED USING: ", attributeType)
+                print("TRIED USING: ", attributeType.name)
 
             assert encodedAttribute != None
             # Format as just a string of binary rather than including "bitarray()"
@@ -195,99 +192,10 @@ class FileEncoder:
             print("ERROR APPENDING JSON RECORD TO LIST")
         return thisRecordJson
 
-class argumentHandler:
-    def __init__(self):   
-        self.saveOption = False 
-        self.dynamicLinkage = False
-        self.staticLink = False
-        self.host = '127.0.0.1' # Localhost
-        self.port = 43555 # Default, can be specified
-        self.fileLocation = '' 
-        self.attributeList = None
-    
-    def handleArguments(self):
-        argCount = len(sys.argv)        
-        optionsExist = self.handleOptions()
-        if optionsExist:
-            if argCount<3:
-                print('Incorrect number of arguments when specifying options')
-                sys.exit(1)
-        elif argCount < 2:
-            print('Requires file path, please specify the csv to be encoded')
-            sys.exit(1)
-        try:
-            if optionsExist:
-                self.fileLocation = sys.argv[2]
-            elif sys.argv[1]: # If there are no options then the first parameter will be the file location
-                self.fileLocation = sys.argv[1]
-            print("FileLocation:", self.fileLocation)
-
-            # Find if there is a host argument
-            hostArgExists = False
-            lastArg = len(sys.argv) - 1
-            if optionsExist & argCount == 3:
-                hostArgExists = True         
-            
-            # If specified, set the host and port (otherwise use defaults)
-            if hostArgExists:
-                hostArg = sys.argv[lastArg]
-                hostArgSplit = hostArg.split(":")
-                self.host = hostArgSplit[0]
-                self.port = hostArgSplit[1]
-        except:
-            print('ClientEncoder.py -options FileToBeEncoded [...] host:port')
-            sys.exit(2)
-
-    def handleOptions(self):
-        isOptions = False
-        # Arg 1 - Options (optional)            
-        for arg in sys.argv:
-            if arg.startswith("-"):
-                print("Found options argument: ", arg)
-                optionArgument = arg
-                isOptions = True
-                # Handle options 
-                for char in optionArgument:
-                    # Options: s, l, d
-                    if char == "s":
-                        self.saveOption = True
-
-                    if char == "l":
-                        self.staticLink = True
-
-                    if char == "d":
-                        self.dynamicLinkage = True  
-        return isOptions
-
-    def defineAttributeTypes(self):
-        # Read a text file in format: NOT_ENCODED, STR_ENCODED, STR_ENCODED, STR_ENCODED, INT_ENCODED
-        # For a different dataset, modify "AttributeTypesList.txt" to your requirements
-        
-        attriTypeList = []
-        # Pass txt to a list of FieldTypes (and store self.attributeList for naming purposes)
-        attriTypeLocation = "./AttributeTypesList.txt"  
-        f = open(attriTypeLocation, 'r')
-        typesList = f.readline()
-        print("Use attribute types from", attriTypeLocation ," : ", typesList)
-        self.attributeList = typesList.split(', ')
-        for i in self.attributeList:   
-            field = FieldType[i]
-            attriTypeList.append(field)
-        
-        for i in attriTypeList:
-            assert type(i) == FieldType
-        assert type(attriTypeList) == list
-        return attriTypeList 
-
-    def findBloomFilterConfig(self):
-        pass
-
-
 def main():
     # USAGE:
-    # ClientEncoder.py -options FileToBeEncoded host:port 
-   
-    argHandler = argumentHandler()
+    # ClientEncoder.py -options FileToBeEncoded host:port    
+    argHandler = argumentHandler(sys.argv)
     argHandler.handleArguments()
     fileLocation = argHandler.fileLocation
     host = argHandler.host
@@ -318,7 +226,6 @@ def main():
         jsonEncodedRecord = clientEncoder.toJson(encodedAttributes)
         #print(jsonEncodedRecord)
 
-    
     # If -s then save encodings in CSV (final delivery / D7, not currently working)
     if argHandler.saveOption:
         clientEncoder.saveEncodings()
@@ -346,5 +253,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-
-

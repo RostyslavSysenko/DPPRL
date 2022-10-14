@@ -7,11 +7,11 @@ Attributes that we want to store per client
 5. database/dataset id
 6. dictionary of unencoded attributes
 """ 
-from ast import dump
 import json
 import socket
 import sys, os
 from clustering.DynamicClustering import DynamicClusterer
+#from server import *
 
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
@@ -21,18 +21,13 @@ from data_structures.Utilities import *
 
 class client:
     # Each client is a data provider / unique dataset
-    def __init__(self, soc, address, connserver, clientIdentifier = 0):
-        # Check correct initialisers
-        assert type(soc) == socket.socket 
-        assert type(address) == tuple
-        # assert type(connserver) == server.Server # Type is actually __main__.Server ....
-    
+    def __init__(self, soc:socket, address, connserver, clientIdentifier = 0):    
         # Initialise values
         self.clientId = clientIdentifier
         self.socket = soc
         self.address = address
         self.connectedServer = connserver
-        self.encodedRecords = [] # List of row objects? - currently redundant
+        self.encodedRows = []
         self.jsonRecords = []
         self.jsonFileName = str(self.clientId) + "_records.json"
         print("New client with json filename: ", self.jsonFileName)
@@ -60,8 +55,8 @@ class client:
 
             self.jsonRecords.append(recJson)
             dumpedJson = json.dumps(recJson)
-            newRecord = Row.parseFromJson(dumpedJson)    
-            self.encodedRecords.append(newRecord)                
+            newRow = Row.parseFromJson(dumpedJson)    
+            self.encodedRows.append(newRow)                
             # Acknowledge received so the client can continue. 
             self.send("ACK")
                                   
@@ -72,13 +67,7 @@ class client:
             recJson = json.loads(rec)    
             print(recJson)  
             self.jsonRecords.append(recJson)
-
-
             DynamicClusterer.findBestClusterForRow()
-                     
-            #print(rec) # Debugging
-            #newRecord = Utilities.Row.parseFromJson(recJson)
-            # self.clusterlist.addRowDynamicNaive(newRecord)
 
         if rcvd.startswith("DYNAMIC UPDATE"):
             pass

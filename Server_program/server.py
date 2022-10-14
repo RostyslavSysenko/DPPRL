@@ -1,11 +1,14 @@
 import socket
 import selectors
 import types
+import time
+import sys
 
-# Internal modules
-from data_structures import ClusterList
-from clustering import staticLinkage
-from communication import client
+from clustering.staticLinkage import StaticLinker
+from data_structures.ClusterList import ClusterList
+from communication.client import client
+from communication.serverArgHandler import argumentHandler
+from communication.metrics import metrics
 #from clustering import IncrementalClusterInput
 #from clustering import DynamicClustering
 #from centralDataStructure import ClusterList
@@ -20,11 +23,17 @@ class Server:
         self.selector = selectors.DefaultSelector()
         self.maxConnections = maxConnections
         self.connectedClients = []
-        self.clusterlist = ClusterList.ClusterList()
+        self.clusterlist = ClusterList()
+
+        self.metric = metrics(self)
+        self.startTime = 0
+
+    def runtime(self):
+        return time.time() - self.startTime
 
     def shutdown(self):
         self.selector.close()
-        self.server_socket.close()
+        self.server_socket.close() # Will forcefully disconnect clients if still connected
 
     def setUpSocketOnCurrentMachine(self, port):
         # Initialise socket
@@ -71,14 +80,15 @@ class Server:
         # Create new client object with a unique id     
         id = self.assignId(client_addr)
         if id:
-            newClient = client.client(client_socket, client_addr, self, clientIdentifier=id)
+            newClient = client(client_socket, client_addr, self, clientIdentifier=id)
         else:
-            newClient = client.client(client_socket, client_addr, self)
+            newClient = client(client_socket, client_addr, self)
         self.connectedClients.append(newClient)
 
     def launchServer(self):
         # a forever loop until we interrupt it or an error occurs
         self.run = True        
+        self.startTime = time.time()
         while self.run:
             events = self.selector.select(timeout=200)
             for key, mask in events:
@@ -118,8 +128,8 @@ class Server:
         if checkPreviousConnections:            
             # Use connections.txt (storing in format of "address:clientId \n")
 
-            # for lines in conn.txt
-                # previousConnection = readline(connections.txt)
+            # for lines in previousConn.txt
+                # previousConnection = readline(previousConnections.txt)
                 # storedAddress, storedClientId = previousConnection.split(":")
                 # looking for a previous connection with the same address
                 # if clientaddress == storedAddress
@@ -170,12 +180,19 @@ class Server:
                     dbs.append(clients.encodedRecords)
                     foundDb += 1
         
-        if len(dbs) > 3:
+        dbCount =len(dbs)
+        if dbCount > 3:
             print("MORE THAN 3 DATABASES")
             pass
+        elif dbCount < 3:
+            print("There are only ", dbCount, " databases, 3 are required.")
 
         # Static linkage with 3 databases
-        staticLinkage.staticLinkage(dbs[0],dbs[1],dbs[2])
+        # To-Do: Scalable for more than 3, ie all databases entered statically
+        statLinker = StaticLinker()
+        self.metric.beginLinkage
+        statLinker.staticLinkage(dbs[0],dbs[1],dbs[2])
+        self.metric.finishLinkage()
 
     def staticLinkageFormatting(self, clientObj, force=False):       
         # Check if formatting is required first.
@@ -184,7 +201,7 @@ class Server:
 
         if formatRequired:
             print("Joining bloom filters")
-            staticRecords = {}
+            staticRecords = {} # []
             # Create format [[rowId, encodedAttributes],[rowId, encodedAttributes], [rowId, encodedAttributes], ... ]
             for record in clientObj.jsonRecords:
                 staticRecord = []
@@ -192,30 +209,41 @@ class Server:
                 concatBloomFilters = "".join(list(record["encodedAttributes"].values())) 
                 staticRecord.append(concatBloomFilters) # Field 2
 
+                # Changed format to dictionary to avoid error on staticLinkage.py: 48 (unhashable type 'dict')
                 staticRecordDict = {}
                 staticRecordDict[staticRecord[0]] = staticRecord[1]
-
                 staticRecords.update(staticRecordDict) # Add to 'dbs'
+
+                # staticRecords.append(staticRecord) # If using list input not dictionary
                 #print(staticRecord)
             return staticRecords
 
     def doDynamicLinkage(self):
         # Update clusters
+        self.metric.beginLinkage()      
         pass              
             
+    def saveConnectedClients(self):
+        # Save current connections to "previousConnections.txt" for later reloading.
+        # Stores each client object by mapping address to clientId
+        
+        # See 
+
+        pass
 
 def main():
-    # Program parameter: maxConnections (default of 5, optional)
-    # Program parameter: port
-    # Usage: server.py port maxConnections    
+    # USAGE:
+    # server.py -options maxConnections port
+    argHandler = argumentHandler(sys.argv)
+    argHandler.handleArguments()
+    maxConns = argHandler.maxConnections
+    port = argHandler.port
 
-    server = Server(15)
-    server_socket = server.setUpSocketOnCurrentMachine(43555)
+    server = Server(maxConns)
+    server_socket = server.setUpSocketOnCurrentMachine(port)
     server.launchServer()
     server.shutdown()
 
 
 if __name__ == "__main__":
     main()
-
-
