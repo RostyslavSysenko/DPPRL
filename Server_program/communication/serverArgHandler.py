@@ -20,21 +20,24 @@ class argumentHandler:
 
         # No compulsory arguments other than server.py
         #try:
-            if optionsExist:
-                self.maxConnections = self.argv[2]
-            elif self.argv[1]: # If there are no options then the first parameter will be the maxConnections
-                self.maxConnections = self.argv[1]
+        if optionsExist:
+            self.maxConnections = int(self.argv[2])
+        elif self.argv[1]: # If there are no options then the first parameter will be the maxConnections
+            self.maxConnections = int(self.argv[1])
 
-            # Find if there is a port argument
-            portArgExists = False
-            lastArg = len(self.argv) - 1
-            if optionsExist & argCount >= 3:
-                portArgExists = True         
-            
-            # If specified, set the port (otherwise use defaults)
-            if portArgExists:
-                portArg = self.argv[lastArg]
-                self.port = portArg
+        # Find if there is a port argument
+        portArgExists = False
+        lastArg = len(self.argv) - 1
+        if optionsExist & argCount >= 3:
+            portArgExists = True     
+        elif argCount >= 2:
+            portArgExists = True
+
+        # If specified, set the port (otherwise use defaults)
+        if portArgExists:
+            portArg = self.argv[lastArg]
+            self.port = portArg
+                
         #except:
         #    print('server.py -options maxConnections port')
         #    sys.exit(2)

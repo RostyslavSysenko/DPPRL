@@ -1,6 +1,9 @@
 import networkx as nx
 import random
 import numpy as np
+from data_structures.Utilities import *
+from data_structures.ClusterList import *
+from communication.metrics import *
 
 def order(BF_list): 
     
@@ -10,6 +13,9 @@ def order(BF_list):
     return result
 
 def sim(a, b):
+    # Debugging
+    #print("Length of a and b: ", len(a), ", ", len(b))
+
     #common bit positions set to 1 
     z = 0 
     p = 2
@@ -46,8 +52,12 @@ def sim(a, b):
         l = l_b
     else: 
         l = l_a 
+
     
-    sim = p * z / (l+z)
+    if z == 0:
+        sim=0
+    else: 
+        sim = p * z / (l+z)
     
     return sim
 
@@ -84,9 +94,10 @@ def staticLinkage(database1, database2, database3):
 
     #first party 
     list_len = len(DBs[0])
-    #print("FIRST INDEX: ", DBs[0][0][0])
+    #print("FIRST INDEX: ", DBs[0 or 1 or 2][[0,01000011][0,00100111] ... [1,0111010]])
     
     # Populate first 4999
+    assert list_len > 4998 & list_len < 5901 # ONLY FOR TESTING, REMOVE THIS LINE
     for x in range(list_len):
         #add [1] to get rid of db index
         cluster = DBs[0][x]
@@ -95,23 +106,43 @@ def staticLinkage(database1, database2, database3):
         G.add_node(cluster[1])
     
     Graph_verts = list(G.nodes)
+    identifiedNonMatches = []
 
-    print("length of DBs: ", len(DBs))
+    print("length of graph ", len(Graph_verts))
+    dbi =0
     for Db in DBs:
+        dbi += 1
         print("length of current Db",len(Db))
 
         if(Db == DBs[0]):
             continue
+        counting = 0
         for vertice in Graph_verts:
-            for rec in Db[1]:
+            # 
+            counting += 1
+            print("For vertice: ", counting, " from DB ", dbi," encoding on vert: ",  vertice)
+            for rec in Db:
+                recIdx = Db.index(rec)
+                #print(rec[0])
+                #print(recIdx)
+                #print(DBs[0][recIdx].count(rec[0]))
+                #if DBs[0][recIdx].count(rec[0]) >= 1:
+                if rec[1].count(vertice) >= 1:
+                    print("Added record because same rec_id")
+                    G.add_edge(vertice, rec[0], sim = 1)
+                elif rec in identifiedNonMatches:
+                    pass
+                else:
+                    # calculate similarity between first party records and other records
+                    # metrics.testStart() 
+                    sim_val = sim(rec[1],vertice)
+                    # metrics.testFinish() # Calculate an average time and output with the For vertice line
+                    if sim_val >= min_similarity_threshold:
+                        # add edges - does not match exactly
+                        thisRecordEncoding = rec[1]
+                        G.add_edge(vertice, thisRecordEncoding, sim = sim_val)   # This line should be used more carefully to optimise performance
 
-                #print(G.number_of_nodes)
-                # calculate similarity between first party records and other records
-                sim_val = sim(rec[1],vertice)
-                if sim_val >= min_similarity_threshold:
-                    # add edges - does not match exactly
-                        rec = rec[1]
-                        G.add_edge(vertice, rec, sim = sim_val)  
+
             #G.number_of_nodes
             #print("Vertices compared with: each record in DB[1]")
             # iterate parties
@@ -148,8 +179,8 @@ def staticLinkage(database1, database2, database3):
             else: 
                 G.remove_edge(node1, node2)
 
-        M = G # initialise to not break later
-        print("init M")
+        #M = nx.Graph() #G # initialise to not break later
+        #print("init M")
                 
         #iterate remaining edges 
         #merge cluster vertices 
@@ -162,13 +193,24 @@ def staticLinkage(database1, database2, database3):
             M = nx.contracted_nodes(G, node1, node2)
     #"""
     final_clusters = M.nodes 
+    StaticClusters = ClusterList(certaintyThreshold=0.75)
+
     # Iterate final clusters
     for c in final_clusters: 
-        print("length of cluster",len(c))
+        print("length of cluster",len(c), " ", c)
         # size at least sm
         if int(c) >= min_subset_size:
+            c = createNewCluster(c)
+            StaticClusters.addClusterStaticly(c)
             # Add to result
             result.append(c)
 
     # output M - returns list of clusters
-    return (" Cluster list: ", result)
+    #return (" Cluster list: ", result)
+    return StaticClusters
+
+def createNewCluster(c):
+    print(c)
+    clusterFormat = c
+
+    return clusterFormat

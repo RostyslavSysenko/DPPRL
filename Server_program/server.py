@@ -39,7 +39,7 @@ class Server:
     def setUpSocketOnCurrentMachine(self, port):
         # Initialise socket
         host = ''
-        port = port        
+        port = int(port)
         print("Socket successfully created")
 
         # Bind the socket to a port
@@ -91,9 +91,9 @@ class Server:
         self.run = True        
         self.startTime = time.time()
         while self.run:
-            events = self.selector.select(timeout=200)
+            events = self.selector.select(timeout=200) # Select a read or write event on the socket to execute
             for key, mask in events:
-                if key.data is None:
+                if key.data is None: # This is only true when the event is a new connection
                     self.acceptNewConnection(key.fileobj)
                 else:
                     self.serve_client(key, mask)
@@ -103,21 +103,18 @@ class Server:
         data = key.data
         if mask & selectors.EVENT_READ:
             rcvd = Server.receive(connSocket, 1024)
-            if rcvd:
-                # print("RECEIVED:", rcvd)
-                # To-do": Figure out a better way for the server to display information than printing every received message.
-                # ie metrics.display()
+            if rcvd: # If a read event was requested on the socket there will be a client message here.
                 for connClient in self.connectedClients:
                     if connClient.socket == connSocket:
                         connClient.interpretMessage(rcvd)                        
-            else:
+            else: # If 
                 print("Closing connection to: ", mask)
                 self.selector.unregister(connSocket)
                 connSocket.close()     
-        if mask & selectors.EVENT_WRITE:
+        if mask & selectors.EVENT_WRITE: # If a write event was requested, send the message.
             if data.outb:
                 print(f"Echoing {data.outb!r} to {data.addr}")
-                sent = connSocket.send(data.outb)  # Should be ready to write
+                sent = connSocket.send(data.outb)  # Send message
                 data.outb = data.outb[sent:]                             
                 
     def assignId(self, clientaddress, checkPreviousConnections=False):
@@ -196,8 +193,9 @@ class Server:
         self.metric.beginLinkage
         output = staticLinkage(dbs[0],dbs[1],dbs[2]) # Make compatible with any number of STATIC INSERTS through message queue?
         self.metric.finishLinkage()
-        print("Module finished (Succesfully?)")
+        print("Module finished (Successfully?)")
         self.clusterlist = output
+
 
 
 
@@ -231,7 +229,7 @@ class Server:
 
     def doDynamicLinkage(self):
         # Update clusters
-        self.metric.beginLinkage()      
+        self.metric.beginLinkage()
         pass              
             
     def saveConnectedClients(self):
