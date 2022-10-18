@@ -1,8 +1,9 @@
 import sys
-from ClientEncoder import FieldType
+from fieldtype import FieldType
 
 class argumentHandler:
-    def __init__(self, argv):   
+
+    def __init__(self, argv=sys.argv):   
         self.saveOption = False 
         self.dynamicLinkage = False
         self.staticLink = False
@@ -84,6 +85,7 @@ class argumentHandler:
         for i in attriTypeList:
             assert type(i) == FieldType
         assert type(attriTypeList) == list
+        self.attributeList = attriTypeList
         return attriTypeList 
 
     def findBloomFilterConfig(self):

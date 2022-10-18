@@ -1,22 +1,22 @@
-from enum import Enum
 from BloomFilter import *;
-from enum import Enum
-from bitarray import bitarray
-import pickle # FOR CSV
+import pickle # FOR CSV save of clusters
 import socket
 import json
 import sys
-from argumentHandler import argumentHandler
+from argumentHandler import *
+from fieldtype import FieldType
 
-class FieldType(Enum):
-    INT_ENCODED = 1
-    STR_ENCODED = 2
-    NOT_ENCODED = 3 # UNIQUE IDENTIFIER
-    
 class FileEncoder:
-    def __init__(self, attributeTypesList, fileLocation):        
-        self.attributeTypesList = attributeTypesList
-        self.fileLocation = fileLocation               
+    """
+    This class should be called 
+    """
+    def __init__(self, argHandler=argumentHandler()): #attributeTypesList, fileLocation):       # Only input to initialise should be the argumentHandler object
+        argHandler.handleArguments
+        if argHandler.attributeList == None:
+            argHandler.defineAttributeTypes()
+        self.attributeTypesList = argHandler.attributeList#attributeTypesList
+        self.fileLocation = argHandler.fileLocation #fileLocation     
+        self.clusterlist = None          
     
         self.host = "127.0.0.1"
         self.port = 43555
@@ -53,6 +53,7 @@ class FileEncoder:
         encodedAttributesOfRow = []
         encodedRecord = ""
         # Populate encodedAttributesOfRow using the INT/STR attribute type key
+        #print("Attempting to use attributeTypesList of datatype: ",type(self.attributeTypesList))
         for attributeIdx in range(0, len(self.attributeTypesList)):
             currentAttribute = self.recordDict[rec][attributeIdx]
             encodedAttribute = None
@@ -143,25 +144,25 @@ class FileEncoder:
         index = 0
         count = 0
         for attribute in attributeTypes:
-            attributeName = str(attribute)
-            attributeId = False
+            attributeName = str(attribute.name)
+            attributeIsId = False
 
             # Determine which attribute, then decide how to name
-            if attribute == "NOT_ENCODED": # Only 1 value is not encoded so counting is not required (unique identifier)
-                attributeId = True
+            if attributeName == "NOT_ENCODED": # Only 1 value is not encoded so counting is not required (unique identifier)
+                attributeIsId = True
                 name = "rowId"
-            elif attribute == "STR_ENCODED":
+            elif attributeName == "STR_ENCODED":
                 strCount += 1
                 count = strCount
                 attributeName = "StringAttribute_"
-            elif attribute == "INT_ENCODED":
+            elif attributeName == "INT_ENCODED":
                 intCount += 1
                 count = intCount
                 attributeName = "IntegerAttribute_"
             else:
-                attribute.join("UNCLASSIFIED")
+                attributeName=("UNCLASSIFIED")
             
-            if attributeId:
+            if attributeIsId:
                 self.attributeNames.append(name)
             else:
                 name = attributeName + str(count)
@@ -197,13 +198,9 @@ def main():
     # ClientEncoder.py -options FileToBeEncoded host:port    
     argHandler = argumentHandler(sys.argv)
     argHandler.handleArguments()
-    fileLocation = argHandler.fileLocation
-    host = argHandler.host
-    port = argHandler.port
-    attributeTypesList = argHandler.defineAttributeTypes()       
 
     # Bloom filter configuration settings
-    # To Do: Move to a separate configuration file
+    # To Do: Move to a separate configuration file [bloomfilter.ini] - in progress
     bf_len = 50
     bf_num_hash_func = 2
     bf_num_inter = 5
@@ -216,7 +213,7 @@ def main():
     bf = BF(bf_len, bf_num_hash_func, bf_num_inter, bf_step,
             max_abs_diff, min_val, max_val, q)
 
-    clientEncoder = FileEncoder(attributeTypesList, fileLocation)
+    clientEncoder = FileEncoder(argHandler=argHandler)#attributeTypesList, fileLocation)
     clientEncoder.nameAttributes(argHandler)
 
     # Perform encoding
@@ -234,7 +231,7 @@ def main():
         # Diplay the first 5 encodings and then attempt to connect to the server
         print("Sample of encoded data:")
         clientEncoder.display(5)
-        clientEncoder.connectToServer(host, port)    
+        clientEncoder.connectToServer(argHandler.host, argHandler.port)    
 
         # If static    
         clientEncoder.sendEncodingsStatic()

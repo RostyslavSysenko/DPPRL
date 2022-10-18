@@ -4,7 +4,7 @@ import types
 import time
 import sys
 
-from clustering.staticLinkage import StaticLinker
+from clustering.staticLinkage import *
 from data_structures.ClusterList import ClusterList
 from communication.client import client
 from communication.serverArgHandler import argumentHandler
@@ -187,12 +187,17 @@ class Server:
         elif dbCount < 3:
             print("There are only ", dbCount, " databases, 3 are required.")
 
+        print("Module calling...")
+
         # Static linkage with 3 databases
         # To-Do: Scalable for more than 3, ie all databases entered statically
-        statLinker = StaticLinker()
+        #statLinker = StaticLinker()
         self.metric.beginLinkage
-        statLinker.staticLinkage(dbs[0],dbs[1],dbs[2])
+        output = staticLinkage(dbs[0],dbs[1],dbs[2]) # Make compatible with any number of STATIC INSERTS through message queue?
         self.metric.finishLinkage()
+        print("Module finished (Succesfully?): ",output)
+        self.clusterlist = output
+
 
     def staticLinkageFormatting(self, clientObj, force=False):       
         # Check if formatting is required first.
@@ -201,7 +206,7 @@ class Server:
 
         if formatRequired:
             print("Joining bloom filters")
-            staticRecords = {} # []
+            staticRecords = []
             # Create format [[rowId, encodedAttributes],[rowId, encodedAttributes], [rowId, encodedAttributes], ... ]
             for record in clientObj.jsonRecords:
                 staticRecord = []
@@ -210,11 +215,11 @@ class Server:
                 staticRecord.append(concatBloomFilters) # Field 2
 
                 # Changed format to dictionary to avoid error on staticLinkage.py: 48 (unhashable type 'dict')
-                staticRecordDict = {}
-                staticRecordDict[staticRecord[0]] = staticRecord[1]
-                staticRecords.update(staticRecordDict) # Add to 'dbs'
+                #staticRecordDict = {}
+                #staticRecordDict[staticRecord[0]] = staticRecord[1]
+                #staticRecords.update(staticRecordDict) # Add to 'dbs'
 
-                # staticRecords.append(staticRecord) # If using list input not dictionary
+                staticRecords.append(staticRecord) # If using list input not dictionary
                 #print(staticRecord)
             return staticRecords
 

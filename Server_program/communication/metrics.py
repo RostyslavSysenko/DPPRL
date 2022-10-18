@@ -62,6 +62,7 @@ class metrics:
         currentRuntime = self.linkageUnit.runtime()
         linkageTime = currentRuntime - self.initialRuntime
         self.linkageRuntimes.append(linkageTime)
+        print("LINKAGE RUNTIME: ", linkageTime)
         return linkageTime
 
         
