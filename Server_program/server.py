@@ -9,6 +9,7 @@ from data_structures.ClusterList import ClusterList
 from communication.client import client
 from communication.serverArgHandler import argumentHandler
 from communication.metrics import metrics
+
 #from clustering import IncrementalClusterInput
 #from clustering import DynamicClustering
 #from centralDataStructure import ClusterList
@@ -23,6 +24,7 @@ class Server:
         self.selector = selectors.DefaultSelector()
         self.maxConnections = maxConnections
         self.connectedClients = []
+        self.indexer = None
         self.clusterlist = ClusterList()
 
         self.metric = metrics(self)
@@ -190,17 +192,28 @@ class Server:
         # Static linkage with 3 databases
         # To-Do: Scalable for more than 3, ie all databases entered statically
         #statLinker = StaticLinker()
+        listTuples = indexerFormatting()
+
+        self.indexer = Indexer(4,listTuples)
+        self.clusterlist = ClusterList(indexer=)
+
         self.metric.beginLinkage
         output = staticLinkage(dbs[0],dbs[1],dbs[2]) # Make compatible with any number of STATIC INSERTS through message queue?
         self.metric.finishLinkage()
-        print("Module finished (Successfully?)")
-        self.clusterlist = output
+        print("Static Linkage Module finished (Successfully?)")
+        for cluster in output:
+            self.clusterlist.addClusterStaticly(cluster)
+        print("Clusters added to linkage unit")
+        #self.clusterlist = output
 
 
 
 
         # SHUTDOWN AFTER COMPLETION
         self.shutdown()
+
+    def indexerFormatting():
+        pass
 
 
     def staticLinkageFormatting(self, clientObj, force=False):       

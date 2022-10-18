@@ -10,6 +10,7 @@ Attributes that we want to store per client
 import json
 import socket
 import sys, os
+from data_structures.Utilities import *
 from clustering.DynamicClustering import DynamicClusterer
 #from server import *
 
@@ -55,8 +56,9 @@ class client:
 
             self.jsonRecords.append(recJson)
             dumpedJson = json.dumps(recJson)
-            newRow = Row.parseFromJson(dumpedJson)    
-            self.encodedRows.append(newRow)                
+            newRow = Row.parseFromJson(dumpedJson)
+            self.connServer.clusterList.addRowStaticly(newRow) 
+            #self.encodedRows.append(newRow)                
             # Acknowledge received so the client can continue. 
             self.send("ACK")
                                   
