@@ -1,2 +1,2 @@
-python "server.py" 50 55666
+python -u "server.py" 15
 PAUSE

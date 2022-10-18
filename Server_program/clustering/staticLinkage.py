@@ -99,6 +99,7 @@ def staticLinkage(database1, database2, database3):
     # Populate first 4999
     assert list_len > 4998 & list_len < 5901 # ONLY FOR TESTING, REMOVE THIS LINE
     for x in range(list_len):
+        print("Added all records from DB 1 to the graph.")
         #add [1] to get rid of db index
         cluster = DBs[0][x]
         clus_ID += 1 
@@ -120,13 +121,9 @@ def staticLinkage(database1, database2, database3):
         for vertice in Graph_verts:
             # 
             counting += 1
-            print("For vertice: ", counting, " from DB ", dbi," encoding on vert: ",  vertice)
+            print("Comparing with vertice from DB 1: ", counting, " all recs from DB ", dbi," encoding on vert: ",  vertice)
             for rec in Db:
-                recIdx = Db.index(rec)
-                #print(rec[0])
-                #print(recIdx)
-                #print(DBs[0][recIdx].count(rec[0]))
-                #if DBs[0][recIdx].count(rec[0]) >= 1:
+                #recIdx = Db.index(rec)
                 if rec[1].count(vertice) >= 1:
                     print("Added record because same rec_id")
                     G.add_edge(vertice, rec[0], sim = 1)

@@ -14,9 +14,10 @@ class argumentHandler:
             if argCount<3:
                 print('Incorrect number of arguments when specifying options')
                 sys.exit(1)
-        #elif argCount < 2:
-        #    print('Requires file path, please specify the csv to be encoded')
-        #    sys.exit(1)
+        elif argCount < 1:
+            print('Please specify maximum number of connections')
+            sys.exit(1)
+        
 
         # No compulsory arguments other than server.py
         #try:
@@ -30,7 +31,7 @@ class argumentHandler:
         lastArg = len(self.argv) - 1
         if optionsExist & argCount >= 3:
             portArgExists = True     
-        elif argCount >= 2:
+        elif argCount >= 3:
             portArgExists = True
 
         # If specified, set the port (otherwise use defaults)
