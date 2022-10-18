@@ -9,7 +9,7 @@ def main():
     host = argHandler.host
     port = argHandler.port
     attributeTypesList = argHandler.defineAttributeTypes()   
-    encoder = FileEncoder(attributeTypesList, fileLocation)
+    encoder = FileEncoder(argHandler=argHandler)
     encoder.connectToServer(host, port) 
     print("QUITTING") 
     encoder.send("QUIT")

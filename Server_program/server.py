@@ -34,6 +34,7 @@ class Server:
     def shutdown(self):
         self.selector.close()
         self.server_socket.close() # Will forcefully disconnect clients if still connected
+        self.run = False
 
     def setUpSocketOnCurrentMachine(self, port):
         # Initialise socket
@@ -195,8 +196,13 @@ class Server:
         self.metric.beginLinkage
         output = staticLinkage(dbs[0],dbs[1],dbs[2]) # Make compatible with any number of STATIC INSERTS through message queue?
         self.metric.finishLinkage()
-        print("Module finished (Succesfully?): ",output)
+        print("Module finished (Succesfully?)")
         self.clusterlist = output
+
+
+
+        # SHUTDOWN AFTER COMPLETION
+        self.shutdown()
 
 
     def staticLinkageFormatting(self, clientObj, force=False):       

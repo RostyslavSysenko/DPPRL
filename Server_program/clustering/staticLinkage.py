@@ -86,6 +86,7 @@ def staticLinkage(database1, database2, database3):
     list_len = len(DBs[0])
     #print("FIRST INDEX: ", DBs[0][0][0])
     
+    # Populate first 4999
     for x in range(list_len):
         #add [1] to get rid of db index
         cluster = DBs[0][x]
@@ -93,50 +94,77 @@ def staticLinkage(database1, database2, database3):
         # add vertices
         G.add_node(cluster[1])
     
-    G_ver = list(G.nodes)
+    Graph_verts = list(G.nodes)
 
-    # iterate parties
-    for i in range(num_of_parties): 
-        # other parties 
-        if i > 0:
+    print("length of DBs: ", len(DBs))
+    for Db in DBs:
+        print("length of current Db",len(Db))
+
+        if(Db == DBs[0]):
+            continue
+        for vertice in Graph_verts:
+            for rec in Db[1]:
+
+                #print(G.number_of_nodes)
+                # calculate similarity between first party records and other records
+                sim_val = sim(rec[1],vertice)
+                if sim_val >= min_similarity_threshold:
+                    # add edges - does not match exactly
+                        rec = rec[1]
+                        G.add_edge(vertice, rec, sim = sim_val)  
+            #G.number_of_nodes
+            #print("Vertices compared with: each record in DB[1]")
+            # iterate parties
+            """
+            for i in range(num_of_parties): 
+                # other parties 
+                if i > 0:
             # iterate records 
             for rec in DBs[i]: 
                 # iterate vertices in G (first party)
-                for c in G_ver :
+                for vertice in Graph_verts :
+                    #print("won't this print forever?")
                     # calculate similarity between first party records and other records
                     sim_val = sim(rec[1],c)
                     if sim_val >= min_similarity_threshold:
                         # add edges - does not match exactly
                             rec = rec[1]
                             G.add_edge(c, rec, sim = sim_val)  
+            """
     
-            G_edges_weighted = list(G.edges(data=True))
-        
-            opt_E = nx.max_weight_matching(G)
-            
-            # iterate edges
-            check_vals = [X for X in opt_E]
+        G_edges_weighted = list(G.edges(data=True))
+    
+        opt_E = nx.max_weight_matching(G)
+        print("weight matching")
+        # iterate edges
+        check_vals = [X for X in opt_E]
 
-            G_edges = list(G.edges)
-            for edges in list(G_edges):
-                node1 = edges[0]
-                node2 = edges[1]
-                if edges in check_vals:
-                    continue
-                else: 
-                    G.remove_edge(node1, node2)
-                    
-            #iterate remaining edges 
-            #merge cluster vertices 
-            G_edges = list(G.edges)
-            for edges in list(G_edges):
-                node1 = edges[0]
-                node2 = edges[1]
-                M = nx.contracted_nodes(G, node1, node2)
+        G_edges = list(G.edges)
+        for edges in list(G_edges):
+            node1 = edges[0]
+            node2 = edges[1]
+            if edges in check_vals:
+                continue
+            else: 
+                G.remove_edge(node1, node2)
 
+        M = G # initialise to not break later
+        print("init M")
+                
+        #iterate remaining edges 
+        #merge cluster vertices 
+        G_edges = list(G.edges)
+        for edges in list(G_edges):
+            node1 = edges[0]
+            node2 = edges[1]
+            assert type(G) == nx.graph
+            print("contracting nodes")
+            M = nx.contracted_nodes(G, node1, node2)
+    #"""
     final_clusters = M.nodes 
     # Iterate final clusters
     for c in final_clusters: 
+        print("length of cluster",len(c))
         # size at least sm
         if int(c) >= min_subset_size:
             # Add to result
