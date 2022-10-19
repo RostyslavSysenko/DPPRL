@@ -92,6 +92,7 @@ class Server:
         # a forever loop until we interrupt it or an error occurs
         self.run = True        
         self.startTime = time.time()
+
         while self.run:
             events = self.selector.select(timeout=200) # Select a read or write event on the socket to execute
             for key, mask in events:
@@ -187,21 +188,25 @@ class Server:
         elif dbCount < 3:
             print("There are only ", dbCount, " databases, 3 are required.")
 
-        print("Module calling...")
+        # Initialise indexer
+        print("Indexer calling")
+        listTuples = self.indexerFormatting()
+        self.indexer = Indexer(4,listTuples)
+
+        print("Static Linkage Module calling...")
 
         # Static linkage with 3 databases
         # To-Do: Scalable for more than 3, ie all databases entered statically
         #statLinker = StaticLinker()
-        listTuples = indexerFormatting()
 
-        self.indexer = Indexer(4,listTuples)
-        self.clusterlist = ClusterList(indexer=)
+        self.clusterlist = ClusterList(indexer=self.indexer)
 
         self.metric.beginLinkage
-        output = staticLinkage(dbs[0],dbs[1],dbs[2]) # Make compatible with any number of STATIC INSERTS through message queue?
+        output = staticLinkage(dbs[0],dbs[1],dbs[2])
         self.metric.finishLinkage()
         print("Static Linkage Module finished (Successfully?)")
         for cluster in output:
+            assert type(cluster) == Cluster
             self.clusterlist.addClusterStaticly(cluster)
         print("Clusters added to linkage unit")
         #self.clusterlist = output
@@ -212,11 +217,17 @@ class Server:
         # SHUTDOWN AFTER COMPLETION
         self.shutdown()
 
-    def indexerFormatting():
-        pass
+    def indexerFormatting(self):
+        """
+        This class takes the json formatted records that are highly compatible and turns them into the random datatype that Indexer takes.
+        """     
+        return tuple()
 
 
-    def staticLinkageFormatting(self, clientObj, force=False):       
+    def staticLinkageFormatting(self, clientObj, force=False):  
+        """
+        This class takes the json formatted records that are highly compatible and turns them into the random datatype that staticLinkage takes.
+        """     
         # Check if formatting is required first.
         formatRequired = True
 

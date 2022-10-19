@@ -121,13 +121,26 @@ def staticLinkage(database1, database2, database3):
         for vertice in Graph_verts:
             # 
             counting += 1
-            print("Comparing with vertice from DB 1: ", counting, " all recs from DB ", dbi," encoding on vert: ",  vertice)
+            print("Comparing all recs from DB ", dbi," with vertice ", counting, " encoding on vert: ",  vertice)
             for rec in Db:
-                #recIdx = Db.index(rec)
-                if rec[1].count(vertice) >= 1:
-                    print("Added record because same rec_id")
-                    G.add_edge(vertice, rec[0], sim = 1)
+                recIdx = Db.index(rec)
+                thisRecordEncoding = rec[1]
+                rowIdOfMatched = rec[0]
+                # Find a way to store the rec[0] which is the rowId when it finds a match, then create a cluster object using that rowId.
+                # Initialise as Cluster(idOfMatched)
+
+                idMatch = rec[0].count(DBs[0][recIdx][0])
+                exactMatch = rec[1].count(vertice)
+                if exactMatch == 1:
+                    print("Added record to graph because exact same encoding")
+                    G.add_edge(vertice, thisRecordEncoding, sim = 1)
+                    break
+                if idMatch == 1:
+                    print("Added record to graph because id matched")
+                    G.add_edge(vertice, thisRecordEncoding, sim = 1)
+                    break
                 elif rec in identifiedNonMatches:
+                    continue
                     pass
                 else:
                     # calculate similarity between first party records and other records
@@ -136,8 +149,9 @@ def staticLinkage(database1, database2, database3):
                     # metrics.testFinish() # Calculate an average time and output with the For vertice line
                     if sim_val >= min_similarity_threshold:
                         # add edges - does not match exactly
-                        thisRecordEncoding = rec[1]
+                        
                         G.add_edge(vertice, thisRecordEncoding, sim = sim_val)   # This line should be used more carefully to optimise performance
+                        break
 
 
             #G.number_of_nodes
@@ -148,66 +162,68 @@ def staticLinkage(database1, database2, database3):
                 # other parties 
                 if i > 0:
             # iterate records 
-            for rec in DBs[i]: 
-                # iterate vertices in G (first party)
-                for vertice in Graph_verts :
-                    #print("won't this print forever?")
-                    # calculate similarity between first party records and other records
-                    sim_val = sim(rec[1],c)
-                    if sim_val >= min_similarity_threshold:
-                        # add edges - does not match exactly
-                            rec = rec[1]
-                            G.add_edge(c, rec, sim = sim_val)  
+                    for rec in DBs[i]: 
+                        # iterate vertices in G (first party)
+                        for vertice in Graph_verts :
+                            #print("won't this print forever?") # Infinite loop
+                            # calculate similarity between first party records and other records
+                            sim_val = sim(rec[1],c)
+                            if sim_val >= min_similarity_threshold:
+                                # add edges - does not match exactly
+                                    rec = rec[1]
+                                    G.add_edge(c, rec, sim = sim_val)  
             """
     
-        G_edges_weighted = list(G.edges(data=True))
-    
-        opt_E = nx.max_weight_matching(G)
-        print("weight matching")
-        # iterate edges
-        check_vals = [X for X in opt_E]
+    G_edges_weighted = list(G.edges(data=True))
 
-        G_edges = list(G.edges)
-        for edges in list(G_edges):
-            node1 = edges[0]
-            node2 = edges[1]
-            if edges in check_vals:
-                continue
-            else: 
-                G.remove_edge(node1, node2)
+    opt_E = nx.max_weight_matching(G)
+    print("weight matching")
+    # iterate edges
+    check_vals = [X for X in opt_E]
 
-        #M = nx.Graph() #G # initialise to not break later
-        #print("init M")
-                
-        #iterate remaining edges 
-        #merge cluster vertices 
-        G_edges = list(G.edges)
-        for edges in list(G_edges):
-            node1 = edges[0]
-            node2 = edges[1]
-            assert type(G) == nx.graph
-            print("contracting nodes")
-            M = nx.contracted_nodes(G, node1, node2)
+    G_edges = list(G.edges)
+    for edges in list(G_edges):
+        node1 = edges[0]
+        node2 = edges[1]
+        if edges in check_vals:
+            continue
+        else: 
+            G.remove_edge(node1, node2)
+
+    M = nx.Graph() #G # initialise to not break later
+    #print("init M")
+            
+    #iterate remaining edges 
+    #merge cluster vertices 
+    G_edges = list(G.edges)
+    for edges in list(G_edges):
+        node1 = edges[0]
+        node2 = edges[1]
+        #print("TYPE OF G: ",type(G))
+        assert type(G) == nx.graph.Graph
+        #print("contracting nodes")
+        M = nx.contracted_nodes(G, node1, node2)
     #"""
     final_clusters = M.nodes 
-    StaticClusters = ClusterList(certaintyThreshold=0.75)
+    StaticClusters = []
+    print("Created cluster list of length: ", len(final_clusters))
 
     # Iterate final clusters
     for c in final_clusters: 
-        print("length of cluster",len(c), " ", c)
+        #print("length of cluster",len(c), " ", c)
         # size at least sm
         if int(c) >= min_subset_size:
             c = createNewCluster(c)
-            StaticClusters.addClusterStaticly(c)
+            #StaticClusters.addClusterStaticly(c)
             # Add to result
-            result.append(c)
+            StaticClusters.append(c)
 
     # output M - returns list of clusters
     #return (" Cluster list: ", result)
     return StaticClusters
 
 def createNewCluster(c):
-    print(c)
+    #print(c)
     clusterFormat = c
 
     return clusterFormat

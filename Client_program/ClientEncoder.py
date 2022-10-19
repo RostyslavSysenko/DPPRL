@@ -193,6 +193,15 @@ class FileEncoder:
             print("ERROR APPENDING JSON RECORD TO LIST")
         return thisRecordJson
 
+    def sendEncodingsDynamic(self):
+        # Send the encodings for dynamic linkage
+        print("Sending DYNAMICALLY")
+        for r in self.jsonEncodings:
+            cmd = "DYNAMIC INSERT " + str(r)
+            self.send(cmd)
+            self.waitForAcknowledge()
+        pass
+
 def main():
     # USAGE:
     # ClientEncoder.py -options FileToBeEncoded host:port    
@@ -223,16 +232,16 @@ def main():
         jsonEncodedRecord = clientEncoder.toJson(encodedAttributes)
         #print(jsonEncodedRecord)
 
+    # Diplay the first 5 encodings and then attempt to connect to the server
+    print("Sample of encoded data:")
+    clientEncoder.display(5)
+    clientEncoder.connectToServer(argHandler.host, argHandler.port)  
+
     # If -s then save encodings in CSV (final delivery / D7, not currently working)
     if argHandler.saveOption:
         clientEncoder.saveEncodings()
     
-    if not argHandler.dynamicLinkage:
-        # Diplay the first 5 encodings and then attempt to connect to the server
-        print("Sample of encoded data:")
-        clientEncoder.display(5)
-        clientEncoder.connectToServer(argHandler.host, argHandler.port)    
-
+    if not argHandler.dynamicLinkage:       
         # If static    
         clientEncoder.sendEncodingsStatic()
         clientEncoder.send("SAVE") # Tell server to save the received encodings after finished sending.
@@ -242,7 +251,10 @@ def main():
             clientEncoder.send("STATIC LINK")
     
     if argHandler.dynamicLinkage:
-        clientEncoder.continuousDynamicLinkage()
+        # If dynamic
+        clientEncoder.sendEncodingsDynamic()
+        clientEncoder.send("SAVE") # Tell server to save the received encodings after finished sending.
+        clientEncoder.waitForAcknowledge()
         # Stays running, reading the csv file for updates
 
     # Close the socket and program

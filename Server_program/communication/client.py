@@ -12,6 +12,7 @@ import socket
 import sys, os
 from data_structures.Utilities import *
 from clustering.DynamicClustering import DynamicClusterer
+
 #from server import *
 
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -57,7 +58,13 @@ class client:
             self.jsonRecords.append(recJson)
             dumpedJson = json.dumps(recJson)
             newRow = Row.parseFromJson(dumpedJson)
-            self.connServer.clusterList.addRowStaticly(newRow) 
+
+            """ This should become redundant as STATIC LINK deals with this
+            newCluster = Cluster(newRow.rowId)
+            newCluster.addOneRowToCluster(newRow)
+            self.connectedServer.clusterlist.addClusterStaticly(newCluster) 
+            """
+            
             #self.encodedRows.append(newRow)                
             # Acknowledge received so the client can continue. 
             self.send("ACK")
@@ -69,7 +76,8 @@ class client:
             recJson = json.loads(rec)    
             print(recJson)  
             self.jsonRecords.append(recJson)
-            DynamicClusterer.findBestClusterForRow()
+            newRow = Row.parseFromJson(dumpedJson)
+            self.connectedServer.clusterlist.addRowDynamic(newRow)
 
         if rcvd.startswith("DYNAMIC UPDATE"):
             pass

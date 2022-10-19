@@ -11,16 +11,18 @@ class argumentHandler:
         argCount = len(self.argv)        
         optionsExist = self.handleOptions()
         if optionsExist:
-            if argCount<3:
+            if argCount<2:
                 print('Incorrect number of arguments when specifying options')
                 sys.exit(1)
         elif argCount < 1:
             print('Please specify maximum number of connections')
             sys.exit(1)
-        
-
+    
         # No compulsory arguments other than server.py
-        #try:
+        if(argCount == 1):
+            # There are no user arguments
+            return
+
         if optionsExist:
             self.maxConnections = int(self.argv[2])
         elif self.argv[1]: # If there are no options then the first parameter will be the maxConnections
