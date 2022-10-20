@@ -1,5 +1,5 @@
 from BloomFilter import *;
-import pickle # FOR CSV save of clusters
+import pickle # For CSV save() option -s
 import socket
 import json
 import sys
@@ -8,9 +8,9 @@ from fieldtype import FieldType
 
 class FileEncoder:
     """
-    This class should be called 
+    This class is called on a data provider's computer and 
     """
-    def __init__(self, argHandler=argumentHandler()): #attributeTypesList, fileLocation):       # Only input to initialise should be the argumentHandler object
+    def __init__(self, argHandler=argumentHandler(sys.argv)): #attributeTypesList, fileLocation):       # Only input to initialise should be the argumentHandler object
         argHandler.handleArguments
         if argHandler.attributeList == None:
             argHandler.defineAttributeTypes()
@@ -222,7 +222,7 @@ def main():
     bf = BF(bf_len, bf_num_hash_func, bf_num_inter, bf_step,
             max_abs_diff, min_val, max_val, q)
 
-    clientEncoder = FileEncoder(argHandler=argHandler)#attributeTypesList, fileLocation)
+    clientEncoder = FileEncoder(argHandler=argHandler)
     clientEncoder.nameAttributes(argHandler)
 
     # Perform encoding

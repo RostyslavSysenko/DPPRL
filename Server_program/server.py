@@ -219,14 +219,14 @@ class Server:
 
     def indexerFormatting(self):
         """
-        This class takes the json formatted records that are highly compatible and turns them into the random datatype that Indexer takes.
+        This class takes the json formatted records and makes them compatible with Indexer module.
         """     
         return tuple()
 
 
     def staticLinkageFormatting(self, clientObj, force=False):  
         """
-        This class takes the json formatted records that are highly compatible and turns them into the random datatype that staticLinkage takes.
+        This class takes the json formatted records and makes them compatible with staticLinkage module.
         """     
         # Check if formatting is required first.
         formatRequired = True
