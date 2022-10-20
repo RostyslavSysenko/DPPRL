@@ -8,6 +8,14 @@ class Indexer:
     for data structures
     """
     def __init__(self,bitsPerAttribute, ListOfAttribute_OrderTupples):
+        # INPUTS:
+            # ListOfAttribute_OrderTupples WILL look like this [(orderNum_1, AttriName_1),(orderNum_2, AttriName_2),...,(orderNum_n, AttriName_n)]
+            # the orderNum_i depends on the encoding of the row. So if we have a row encoding as follows 000011110101 and each attribute was taking 4 bits
+            # and 0000 was encoding for zipcode and 1111 was encoding for age and 0101 represnts cityName, then our attribute order tupple would look as follows:
+                # [(0,"zipcode"),(1, "age")]
+                # for this to work we must have each attribute taking same number of bits
+                #  note cityName attribute is not indexed over since it is not included in attribute order tupple, but if we wantted to index based on that too, then we would have to include it
+            # list of order tupples doesnt have to include all attributes, but instead just includes attributes over which we want to index
         self.listOfInxedDictionaries = []
         self.listofIndexedAttributeNames = []
 
