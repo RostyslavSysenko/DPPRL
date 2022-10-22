@@ -3,10 +3,10 @@ import os, sys
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.Utilities import *
-from  data_structures.ClusterList import *
+
 
 class DynamicClusterer:
-    def findBestClusterForRow(blockingTurnedOn,row,operation, indexer,clusterAggregations):
+    def findBestClusterForRow(self, blockingTurnedOn, row, operation, indexer,clusterAggregations):
         """
         - the idea of taking 2 best clusters is so we can somewhat judge uncertainty of clustering
         by checking how close the 2nd cluster comes to the first
@@ -25,7 +25,7 @@ class DynamicClusterer:
             #check to make sure that indexing is done
             assert not indexer.indexingHasNotBeenDoneYet(), "indexing not done"
             indexedClusterList = indexer.getClustersWithAtLeast1RowWithSameKey(row)
-            formattedClusterAggregations = ClusterList.listOfClustersTo2DArrayOfClustAggr(indexedClusterList)
+            formattedClusterAggregations = self.listOfClustersTo2DArrayOfClustAggr(indexedClusterList)
             
             knn_classifier.fit(formattedClusterAggregations) #fit the model based on subset of data
             distance_mat, neighbours_vec = knn_classifier.kneighbors([row.rowListRepresentation])
@@ -64,3 +64,11 @@ class DynamicClusterer:
             certainty = 0
 
         return certainty
+
+    def listOfClustersTo2DArrayOfClustAggr(clusterList):
+        clusterListRepr2D = list()
+
+        for cluster in clusterList:
+            clusterListRepr2D.append(cluster.getClusterListRepresentation())
+            
+        return clusterListRepr2D

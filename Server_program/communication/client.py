@@ -29,7 +29,7 @@ class client:
         self.socket = soc
         self.address = address
         self.connectedServer = connserver
-        self.encodedRows = []
+        self.rowList = []
         self.jsonRecords = []
         self.jsonFileName = str(self.clientId) + "_records.json"
         print("New client with json filename: ", self.jsonFileName)
@@ -58,14 +58,8 @@ class client:
             self.jsonRecords.append(recJson)
             dumpedJson = json.dumps(recJson)
             newRow = Row.parseFromJson(dumpedJson)
-
-            """ This should become redundant as STATIC LINK deals with this
-            newCluster = Cluster(newRow.rowId)
-            newCluster.addOneRowToCluster(newRow)
-            self.connectedServer.clusterlist.addClusterStaticly(newCluster) 
-            """
-            
-            #self.encodedRows.append(newRow)                
+            self.rowList.append(newRow) 
+          
             # Acknowledge received so the client can continue. 
             self.send("ACK")
                                   
@@ -73,11 +67,16 @@ class client:
         if rcvd.startswith("DYNAMIC INSERT"):
             # Receive encoding
             rec = rcvd.strip("DYNAMIC INSERT ")
-            recJson = json.loads(rec)    
-            print(recJson)  
+            recJson = json.loads(rec)
+            recJson["DBId"] = self.clientId
+
             self.jsonRecords.append(recJson)
+            dumpedJson = json.dumps(recJson)
             newRow = Row.parseFromJson(dumpedJson)
             self.connectedServer.clusterlist.addRowDynamic(newRow)
+
+            # Acknowledge received so the client can continue. 
+            self.send("ACK")
 
         if rcvd.startswith("DYNAMIC UPDATE"):
             pass

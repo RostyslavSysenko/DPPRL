@@ -59,7 +59,7 @@ class FileEncoder:
             encodedAttribute = None
             attributeType = self.attributeTypesList[attributeIdx]
             # Use the input attributeTypesList to encode attributes accordingly.
-            if attributeType.name == "INT_ENCODED":
+            if attributeType.name == "INT_ENCODED" and currentAttribute.isnumeric():
                 numerical = int(currentAttribute)
                 intValueSet1, intValueSet2 = bf.convert_num_val_to_set(numerical, 0)  # 0 is a magic number
                 encodedAttribute = bf.set_to_bloom_filter(intValueSet1) 
@@ -227,10 +227,11 @@ def main():
 
     # Perform encoding
     for record in clientEncoder.recordDict:
-        encodedAttributes = clientEncoder.encodeByAttribute(bf, record)
-        #print(encodedAttributes)
-        jsonEncodedRecord = clientEncoder.toJson(encodedAttributes)
-        #print(jsonEncodedRecord)
+        if record != None:
+            encodedAttributes = clientEncoder.encodeByAttribute(bf, record)
+            #print(encodedAttributes)
+            jsonEncodedRecord = clientEncoder.toJson(encodedAttributes)
+            #print(jsonEncodedRecord)
 
     # Diplay the first 5 encodings and then attempt to connect to the server
     print("Sample of encoded data:")

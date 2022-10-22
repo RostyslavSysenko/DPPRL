@@ -41,14 +41,6 @@ class ClusterList:
     def blockingTurnedOn(self):
         return self.__indexer is not None
 
-    def listOfClustersTo2DArrayOfClustAggr(clusterList):
-        clusterListRepr2D = list()
-
-        for cluster in clusterList:
-            clusterListRepr2D.append(cluster.getClusterListRepresentation())
-            
-        return clusterListRepr2D
-
     def __addNewClusterToClusterList(self,clusterObj):
         # insertion
         clusterObj.updateClusterOnClusterListInsertion(self,self.nextAvailIndex)
@@ -99,7 +91,7 @@ class ClusterList:
             rowList = self.__generateRowList()
             self.__indexer.initialIndexBuild(rowList)
     
-        clusterIdx,selectionCertainty = DynamicClusterer.findBestClusterForRow(self.blockingTurnedOn(),row,Operation.INSERT, self.__indexer,self.clusterAggregations)
+        clusterIdx,selectionCertainty = DynamicClusterer.findBestClusterForRow(self.blockingTurnedOn(), row, Operation.INSERT, self.__indexer, self.clusterAggregations)
 
         # here we conduct the insertion operation
         if (selectionCertainty>self.certaintyThreshold): # we decide to inser

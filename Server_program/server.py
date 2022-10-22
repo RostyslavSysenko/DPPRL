@@ -9,6 +9,7 @@ from data_structures.ClusterList import ClusterList
 from communication.client import client
 from communication.serverArgHandler import argumentHandler
 from communication.metrics import metrics
+from data_structures.Indixer import Indexer
 
 #from clustering import IncrementalClusterInput
 #from clustering import DynamicClustering
@@ -155,7 +156,8 @@ class Server:
 
 
     def doStaticLinkage(self, json=True):
-        # Perform hungarian algorithm on 3 inputs
+        self.clusterlist = ClusterList(indexer=self.indexer)
+        # Perform blossom algorithm on 3 inputs
 
         # Purpose of this function is for demonstration, we will be using first 3 
         # databases as a staticly linked starting point then add 2 more dynamically
@@ -163,23 +165,15 @@ class Server:
         # Input should be all 3 clients records who have sent operation STATIC INSERT.
         foundDb = 0
         dbs = []
-        if json:
-            for clients in self.connectedClients:
-                assert clients.jsonRecords != None
-                if foundDb < 3:
-                    staticRecordList = self.staticLinkageFormatting(clients)
-                    dbs.append(staticRecordList)
-                    foundDb += 1
-                # find 3 clients
-                # make a list of records that are stored as format [rowId, concatenated encodings]
-                # pass to db1/2/3 parameters
-                pass
-        else:
-            for clients in self.connectedClients:
-                assert clients.encodedRecords != None
-                if foundDb < 3:
-                    dbs.append(clients.encodedRecords)
-                    foundDb += 1
+        for clients in self.connectedClients:
+            assert clients.rowList != None # This indicates static
+            if foundDb < 3:
+                #staticRecordList = self.staticLinkageFormatting(clients)
+                dbs.append(clients.rowList)
+                foundDb += 1
+            # find 3 clients
+            # make a list of records that are stored as format [rowId, concatenated encodings]
+            # pass to db1/2/3 parameters
         
         dbCount =len(dbs)
         if dbCount > 3:
@@ -191,31 +185,27 @@ class Server:
         # Initialise indexer
         print("Indexer calling")
         listTuples = self.indexerFormatting()
-        self.indexer = Indexer(4,listTuples)
+        #self.indexer = Indexer(50,("IntegerAttribute_1",4)) # Using 50 bit length hardcoded
 
         print("Static Linkage Module calling...")
 
         # Static linkage with 3 databases
         # To-Do: Scalable for more than 3, ie all databases entered statically
-        #statLinker = StaticLinker()
 
-        self.clusterlist = ClusterList(indexer=self.indexer)
+
+        staticLink = staticLinker(indexer=self.indexer)
 
         self.metric.beginLinkage
-        output = staticLinkage(dbs[0],dbs[1],dbs[2])
+        output = staticLink.staticLinkage(dbs)
         self.metric.finishLinkage()
         print("Static Linkage Module finished (Successfully?)")
         for cluster in output:
             assert type(cluster) == Cluster
             self.clusterlist.addClusterStaticly(cluster)
-        print("Clusters added to linkage unit")
+        print("Static Clusters added to linkage unit")
         #self.clusterlist = output
 
 
-
-
-        # SHUTDOWN AFTER COMPLETION
-        self.shutdown()
 
     def indexerFormatting(self):
         """
@@ -254,13 +244,11 @@ class Server:
     def doDynamicLinkage(self):
         # Update clusters
         self.metric.beginLinkage()
-        pass              
+        pass
             
     def saveConnectedClients(self):
         # Save current connections to "previousConnections.txt" for later reloading.
         # Stores each client object by mapping address to clientId
-        
-        # See 
 
         pass
 
@@ -276,7 +264,6 @@ def main():
     server_socket = server.setUpSocketOnCurrentMachine(port)
     server.launchServer()
     server.shutdown()
-
 
 if __name__ == "__main__":
     main()
