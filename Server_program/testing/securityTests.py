@@ -18,7 +18,7 @@ class frequencyAttack:
 
         self.commonLetters = 'ETAOINSHRDLCUMWFGYPBVKJXQZ'
 
-        self.LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        self.LETTERS = 'DEFGHIJKLMNOPQRSTUVWXYZzzzABCzaaa'
 
 
     def getFreqCount(self,message,key):
@@ -32,14 +32,14 @@ class frequencyAttack:
         freqCount = {}
         for letter in key:
             # Set
-            freqCount[letter] = 0
+            freqCount[letter] = self.englishLetterFreq[letter]
         print(freqCount)
 
 
 
         for letter in message.upper():
             if letter in self.LETTERS:
-                freqCount[letter] += 1
+                freqCount[letter] += self.englishLetterFreq[letter]
 
         print(freqCount)
 

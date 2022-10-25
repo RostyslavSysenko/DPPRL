@@ -42,7 +42,8 @@ class metrics:
     def findAverageClusterPurity(self):
         # 
 
-        pass
+        self.averageClusterPurity/self.perfectClustersPercent
+        print
 
     def findPerfectClusterPercentage():
         # 
