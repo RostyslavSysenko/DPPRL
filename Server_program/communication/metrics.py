@@ -1,16 +1,12 @@
 import os, sys
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
-#from server import Server
-
-"""
-This class stores and finds metrics relating to the linkage unit.
-
-"""
-
 
 
 class metrics:
+    """
+    This class stores and finds metrics relating to the linkage unit.
+    """
     def __init__(self, server):
         self.linkageUnit = server # Use for access to all realtime data on the linkage unit
         # Metrics being looked for
@@ -39,8 +35,9 @@ class metrics:
         self.update()
         self.display()
 
-    def findAverageClusterPurity(self):
+    def findAverageClusterPurity(self, clusList):
         # 
+       
 
         pass
 
@@ -48,6 +45,30 @@ class metrics:
         # 
 
         pass
+
+    def findGroundTruth(self,rowLists):
+        matches = 0
+        rowListCount = len(rowLists)
+        # For rowList i, - 1, 2, 3, 4, 5
+        for i in range(rowListCount):
+            rowListOrigin = rowLists[i]
+            # For rowlist being compared, rowList > i
+            for rowListCompare in rowLists:
+                if rowLists.index(rowListCompare) <= i:
+                    continue
+                else:
+                    for row in rowListOrigin:
+                        rec_id = row.rowId
+                        for otherRow in rowListCompare:
+                            if rec_id == otherRow.rowId:
+                                matches += 1
+
+        print("Found",matches,"matches in rowLists using rec_id for ground truth")
+
+
+            
+
+
 
     def findClustersWithMatches(self):
         # Number of clusters with between 2 and 5 rows in them
