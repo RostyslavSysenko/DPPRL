@@ -89,7 +89,6 @@ class staticLinker:
             print("ERROR Static linkage requires 3 inputs, returning empty list")
             return []
 
-
         # sim --> Similarity function
 
         # ord --> Ordering function for incremental processing of databases : 
@@ -112,11 +111,8 @@ class staticLinker:
         # choose between random_order or sorted_order 
         # sorted_order is more efficient
         DBs = self.random_order(DBs)
-
-        #first party 
-
-        listCluster = [] # NOT USED FOR ANYTHING
        
+       # Needs explanation here
         for i in range(num_of_parties-1):
             Graph_verts = self.initaliseVertices(DBs[i])
 
@@ -142,8 +138,10 @@ class staticLinker:
             print("weight matching")
             # iterate edges
             check_vals = [X for X in opt_E]
+            print("Length of check_vals:", len(check_vals))
 
             G_edges = list(self.G.edges)
+            print("Size of G_edges before purging:", len(G_edges))
             for edges in list(G_edges):
                 node1 = edges[0]
                 node2 = edges[1]
@@ -155,6 +153,7 @@ class staticLinker:
             #iterate remaining edges 
             #merge cluster vertices 
             G_edges = list(self.G.edges)
+            print("Size of G_edges before contraction:", len(G_edges))
             for edges in list(G_edges):
                 node1 = edges[0]
                 node2 = edges[1]
@@ -163,15 +162,16 @@ class staticLinker:
                 #print("contracting nodes")
                 cluster = self.createNewCluster(node1)
                 cluster.addOneRowToCluster(node2)
-                listCluster.append(cluster)
+                self.listOfClusters.append(cluster)
                 self.G = nx.contracted_nodes(self.G, node1, node2)
+            print("Size of G_edges after contraction:", len(G_edges))
                 
             
         
         final_clusters = self.G.nodes
 
  
-        print("Created cluster list of length: ", len(final_clusters))
+        #print("Created cluster list of length: ", len(final_clusters))
 
         # Iterate final clusters
         for c in final_clusters: 

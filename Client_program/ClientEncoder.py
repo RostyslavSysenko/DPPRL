@@ -56,6 +56,14 @@ class FileEncoder:
         #print("Attempting to use attributeTypesList of datatype: ",type(self.attributeTypesList))
         for attributeIdx in range(0, len(self.attributeTypesList)):
             currentAttribute = self.recordDict[rec][attributeIdx]
+            if currentAttribute == None:
+                print("Current attribute did not exist.")
+                break
+            if currentAttribute == '':
+                print("Current attribute did not exist.")
+                break
+
+
             encodedAttribute = None
             attributeType = self.attributeTypesList[attributeIdx]
             # Use the input attributeTypesList to encode attributes accordingly.

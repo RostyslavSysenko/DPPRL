@@ -185,7 +185,7 @@ class Server:
         # Initialise indexer
         print("Indexer calling")
         listTuples = self.indexerFormatting()
-        #self.indexer = Indexer(50,("IntegerAttribute_1",4)) # Using 50 bit length hardcoded
+        self.indexer = Indexer(50,listTuples) # Using 50 bit length hardcoded
 
         print("Static Linkage Module calling...")
 
@@ -206,18 +206,21 @@ class Server:
         #self.clusterlist = output
 
 
-
     def indexerFormatting(self):
         """
-        This class takes the json formatted records and makes them compatible with Indexer module.
+        This class returns the input required for Indexer module. 
+        This function means that the indexer is hardcoded to use the first encoded integer attribute which is zipcode.
         """     
-        return tuple()
+        returnVal = list()
+        zipcode = tuple(("IntegerAttribute_1",4))
+        returnVal.append(zipcode)
+        return returnVal
 
-
+    """
     def staticLinkageFormatting(self, clientObj, force=False):  
-        """
-        This class takes the json formatted records and makes them compatible with staticLinkage module.
-        """     
+        
+    #This class is redundant as the static linkage module is fixed to now use Row objects.
+           
         # Check if formatting is required first.
         formatRequired = True
 
@@ -240,12 +243,9 @@ class Server:
                 staticRecords.append(staticRecord) # If using list input not dictionary
                 #print(staticRecord)
             return staticRecords
-
-    def doDynamicLinkage(self):
-        # Update clusters
-        self.metric.beginLinkage()
-        pass
-            
+    """
+    
+      
     def saveConnectedClients(self):
         # Save current connections to "previousConnections.txt" for later reloading.
         # Stores each client object by mapping address to clientId

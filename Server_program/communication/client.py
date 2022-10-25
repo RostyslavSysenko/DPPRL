@@ -34,6 +34,8 @@ class client:
         self.jsonFileName = str(self.clientId) + "_records.json"
         print("New client with json filename: ", self.jsonFileName)
 
+        self.staticNotDone = False # Assume it has been done so it will print the error only once if it needed.
+
     def send(self, message):
         message = str(message)
         encoded = message.encode()   
@@ -73,7 +75,15 @@ class client:
             self.jsonRecords.append(recJson)
             dumpedJson = json.dumps(recJson)
             newRow = Row.parseFromJson(dumpedJson)
-            self.connectedServer.clusterlist.addRowDynamic(newRow)
+
+            if self.connectedServer.clusterlist.clusterAggregations:
+                print("CLUSTER AGGS:",self.connectedServer.clusterlist.clusterAggregations)
+                self.connectedServer.clusterlist.addRowDynamic(newRow)
+            elif self.staticNotDone:
+                pass
+            else:
+                self.staticNotDone = True
+                print("ERROR UNABLE TO DYNAMICALLY LINK: No cluster aggregations, please complete static linkage first.")
 
             # Acknowledge received so the client can continue. 
             self.send("ACK")
