@@ -1,2 +1,0 @@
-python save.py
-PAUSE

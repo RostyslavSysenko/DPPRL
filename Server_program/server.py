@@ -166,15 +166,15 @@ class Server:
         foundDb = 0
         dbs = []
         for clients in self.connectedClients:
-            assert clients.rowList != None # This indicates static
+            assert clients.rowList != None # This indicates static data, if static is done after dynamic this will fail.
             if foundDb < 3:
                 #staticRecordList = self.staticLinkageFormatting(clients)
                 dbs.append(clients.rowList)
                 foundDb += 1
-            # find 3 clients
-            # make a list of records that are stored as format [rowId, concatenated encodings]
-            # pass to db1/2/3 parameters
         
+        # Static linkage with 3 databases
+        # To-Do: Scalable for more than 3, ie any databases entered statically before a static link is called (-l)
+
         dbCount =len(dbs)
         if dbCount > 3:
             print("MORE THAN 3 DATABASES")
@@ -185,14 +185,11 @@ class Server:
         # Initialise indexer
         print("Indexer calling")
         listTuples = self.indexerFormatting()
-        #self.indexer = Indexer(50,("IntegerAttribute_1",4)) # Using 50 bit length hardcoded
+        self.indexer = Indexer(50,listTuples) # Using 50 bit length hardcoded
 
         print("Static Linkage Module calling...")
 
-        # Static linkage with 3 databases
-        # To-Do: Scalable for more than 3, ie all databases entered statically
-
-
+        # Initialise staticLinker
         staticLink = staticLinker(indexer=self.indexer)
 
         self.metric.beginLinkage
@@ -203,53 +200,31 @@ class Server:
             assert type(cluster) == Cluster
             self.clusterlist.addClusterStaticly(cluster)
         print("Static Clusters added to linkage unit")
-        #self.clusterlist = output
-
 
 
     def indexerFormatting(self):
         """
-        This class takes the json formatted records and makes them compatible with Indexer module.
+        This function returns the input required for Indexer module. 
+        Hardcoded to use the first encoded integer attribute which is zipcode.
         """     
-        return tuple()
-
-
-    def staticLinkageFormatting(self, clientObj, force=False):  
-        """
-        This class takes the json formatted records and makes them compatible with staticLinkage module.
-        """     
-        # Check if formatting is required first.
-        formatRequired = True
-
-
-        if formatRequired:
-            print("Joining bloom filters")
-            staticRecords = []
-            # Create format [[rowId, encodedAttributes],[rowId, encodedAttributes], [rowId, encodedAttributes], ... ]
-            for record in clientObj.jsonRecords:
-                staticRecord = []
-                staticRecord.append(record["rowId"]) # Field 1
-                concatBloomFilters = "".join(list(record["encodedAttributes"].values())) 
-                staticRecord.append(concatBloomFilters) # Field 2
-
-                # Changed format to dictionary to avoid error on staticLinkage.py: 48 (unhashable type 'dict')
-                #staticRecordDict = {}
-                #staticRecordDict[staticRecord[0]] = staticRecord[1]
-                #staticRecords.update(staticRecordDict) # Add to 'dbs'
-
-                staticRecords.append(staticRecord) # If using list input not dictionary
-                #print(staticRecord)
-            return staticRecords
-
-    def doDynamicLinkage(self):
-        # Update clusters
-        self.metric.beginLinkage()
-        pass
-            
+        returnVal = list()
+        zipcode = tuple(("IntegerAttribute_1",4))
+        returnVal.append(zipcode)
+        return returnVal
+      
     def saveConnectedClients(self):
         # Save current connections to "previousConnections.txt" for later reloading.
         # Stores each client object by mapping address to clientId
 
+        pass
+
+    def findGroundTruth(self):
+        rowListInput = []
+        for clients in self.connectedClients:
+            assert clients.rowList != None
+            rowListInput.append(clients.rowList)
+
+        self.metric.findGroundTruth(rowListInput)
         pass
 
 def main():

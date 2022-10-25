@@ -34,6 +34,8 @@ class client:
         self.jsonFileName = str(self.clientId) + "_records.json"
         print("New client with json filename: ", self.jsonFileName)
 
+        self.staticNotDone = False # Used to only print error message once per client who attempts dynamic.
+
     def send(self, message):
         message = str(message)
         encoded = message.encode()   
@@ -73,7 +75,17 @@ class client:
             self.jsonRecords.append(recJson)
             dumpedJson = json.dumps(recJson)
             newRow = Row.parseFromJson(dumpedJson)
-            self.connectedServer.clusterlist.addRowDynamic(newRow)
+
+            # Check if there are cluster aggregations from successful static linkage.
+            if self.connectedServer.clusterlist.clusterAggregations:
+                self.staticNotDone = False
+                #print("CLUSTER AGGREGATIONS:",self.connectedServer.clusterlist.clusterAggregations)
+                self.connectedServer.clusterlist.addRowDynamic(newRow)
+            elif self.staticNotDone:
+                pass
+            else:
+                self.staticNotDone = True
+                print("ERROR UNABLE TO DYNAMICALLY LINK: No cluster aggregations, please complete static linkage first.")
 
             # Acknowledge received so the client can continue. 
             self.send("ACK")
@@ -96,6 +108,12 @@ class client:
         if rcvd.startswith("SAVE"):
             self.saveToJson() # Move this function call if needed to reduce amount of writes to disk (optimise)
             self.send("ACK") 
+
+        if rcvd.startswith("TRUTH"):
+            # Command should be better named
+            # Find ground truth using rec_ids
+            print("Ground truth requested.")
+            self.connectedServer.findGroundTruth()
 
         # if rcvd.startswith("")
         # More commands to be entered here
