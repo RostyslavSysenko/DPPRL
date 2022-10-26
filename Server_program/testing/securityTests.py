@@ -32,7 +32,7 @@ class frequencyAttack:
         freqCount = {}
         for letter in key:
             # Set
-            freqCount[letter] = self.englishLetterFreq[letter]
+            freqCount[letter] =  #self.englishLetterFreq[letter] Wrong
         print(freqCount)
 
 

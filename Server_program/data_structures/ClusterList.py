@@ -4,7 +4,7 @@ parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.Utilities import *
 from data_structures.Indixer import * # Indexer
-from data_structures.ClusterList import * # Indexer
+from data_structures.ClusterList import *
 from clustering.DynamicClustering import *
 
 class ClusterList:
@@ -94,7 +94,7 @@ class ClusterList:
         clusterIdx,selectionCertainty = DynamicClusterer.findBestClusterForRow(self.blockingTurnedOn(), row, Operation.INSERT, self.__indexer, self.clusterAggregations)
 
         # here we conduct the insertion operation
-        if (selectionCertainty>self.certaintyThreshold): # we decide to inser
+        if (selectionCertainty>self.certaintyThreshold): # we decide to insert
             self.__growExistingClusterInAClusterList(row, clusterIdx)
         else: # clustering certainty is low so we create a new cluster
             new_cluster = Cluster()

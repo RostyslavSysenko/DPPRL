@@ -6,7 +6,7 @@ from data_structures.Utilities import *
 
 
 class DynamicClusterer:
-    def findBestClusterForRow(self, blockingTurnedOn, row, operation, indexer,clusterAggregations):
+    def findBestClusterForRow(self, blockingTurnedOn, row, operation, indexer, clusterAggregations):
         """
         - the idea of taking 2 best clusters is so we can somewhat judge uncertainty of clustering
         by checking how close the 2nd cluster comes to the first

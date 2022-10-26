@@ -115,6 +115,12 @@ class client:
             print("Ground truth requested.")
             self.connectedServer.findGroundTruth()
 
+        if rcvd.startswith("BITLENGTH"):
+            # Bit length used for indexer
+            split = rcvd.split(" ")
+            bitlen = split[1]
+            self.connectedServer.bitlength = bitlen
+
         # if rcvd.startswith("")
         # More commands to be entered here
         

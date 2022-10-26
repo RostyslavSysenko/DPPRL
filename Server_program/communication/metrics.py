@@ -15,7 +15,7 @@ class metrics:
         self.perfectClustersPercent = 0 #in range(0, 100) # Aim: 100
         self.clustersWithMatches = 0 # Aim: 2500.
 
-        # Unsure what is BigO space & Time?
+        # Unsure what is BigO space & Time (Space/Time complexity?)
         self.linkageRuntimes = [] # List of all/any calculated linkage runtimes
 
         # Data needed in memory for metric calculation

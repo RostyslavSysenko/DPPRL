@@ -1,4 +1,3 @@
-from mailcap import findmatch
 import networkx as nx
 import random
 import numpy as np
@@ -7,16 +6,17 @@ parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.Utilities import *
 from communication.metrics import *
-from data_structures.Indixer import *
+from data_structures.Indixer import Indexer
 
 
 class staticLinker:
-    def __init__(self, simThreshold=0.75, indexer=None):
+    def __init__(self, simThreshold=0.75, indexer=None, metricsIn=None):
         self.min_similarity_threshold = simThreshold
         self.G = nx.Graph()
         self.listOfClusters = []
         self.clusterId = 0
         self.indexer = indexer
+        self.metric = metricsIn
 
     def random_order(self, BF_list): 
         
@@ -104,7 +104,10 @@ class staticLinker:
         # M - matching clusters
         #intialisation 
         clus_ID = 0
-        self.G = nx.Graph()
+        resultGraph = nx.Graph()
+        for db in DBs:
+            self.initaliseVertices(db,resultGraph)
+
         #result = []
 
         # order databases 
@@ -114,124 +117,134 @@ class staticLinker:
        
        # Needs explanation here
         for i in range(num_of_parties-1):
-            Graph_verts = self.initaliseVertices(DBs[i])
+            tempGraph = nx.Graph()
+            Graph_verts = self.initaliseVertices(DBs[i], tempGraph)
 
             print("length of graph ", len(Graph_verts))
-            dbi = 0
             # for DB in index > i 
             for Db in DBs:
                 if DBs.index(Db) <= i:
                     continue
-                if dbi <= i:
-                    continue
-                dbi += 1
+
                 print("length of current Db: ",len(Db))
-
-
                 counting = 0
+
+                indexerExist = False
+                if self.indexer != None:
+                    assert type(self.indexer) == Indexer
+                    self.indexer.initialIndexBuild(Db)
+                    indexerExist = True
+
                 for vertice in Graph_verts:
                     counting += 1
-                    print("Comparing all recs from DB ", dbi," with vertice ", counting, " encoding on vert: ",  vertice)
-                    self.findMatchesinDB(Db, vertice)
+                    #print("Comparing all recs from DB ", i," with vertice ", counting, " encoding on vert: ",  vertice)
 
-            opt_E = nx.max_weight_matching(self.G)
-            print("weight matching")
-            # iterate edges
-            check_vals = [X for X in opt_E]
-            print("Length of check_vals:", len(check_vals))
+                    # if vertice already in a cluster with 3 rows then continue
+
+                    self.findMatchesinDB(Db, vertice, indexerExists=indexerExist)
 
             G_edges = list(self.G.edges)
-            print("Size of G_edges before purging:", len(G_edges))
-            for edges in list(G_edges):
-                node1 = edges[0]
-                node2 = edges[1]
-                if edges in check_vals:
-                    continue
-                else: 
-                    self.G.remove_edge(node1, node2)
+            print("Initial length of G_edges:", len(G_edges))
+
+            G_edges_weighted = list(self.G.edges(data=True))
+            opt_E = nx.max_weight_matching(self.G)
+            # iterate edges
+            #print("Type of opt_E",type(opt_E))
+            check_vals = list(opt_E)
+            print("Length of check_vals:", len(check_vals))
+
+            for outer in check_vals:
+                resultGraph.add_edge(*outer)
+                
+            
+            
+            #resultGraph = self.G
                     
             #iterate remaining edges 
             #merge cluster vertices 
-            G_edges = list(self.G.edges)
-            print("Size of G_edges before contraction:", len(G_edges))
-            for edges in list(G_edges):
+            Result_edges = list(resultGraph.edges)
+            print("Size of resultGraph.edges before contraction:", len(Result_edges))
+            for edges in list(Result_edges):
                 node1 = edges[0]
                 node2 = edges[1]
-                #print("TYPE OF G: ",type(G))
-                assert type(self.G) == nx.graph.Graph
-                #print("contracting nodes")
-                cluster = self.createNewCluster(node1)
-                cluster.addOneRowToCluster(node2)
-                self.listOfClusters.append(cluster)
-                self.G = nx.contracted_nodes(self.G, node1, node2)
-            print("Size of G_edges after contraction:", len(G_edges))
+                #print("TYPE OF G: ",type(resultGraph))
+                assert type(resultGraph) == nx.graph.Graph
+
+                # if neither node has been used to make a cluster, then:
+                potentialCluster1 = self.findIfNodeIsClusterInClusterList(node1)
+                if potentialCluster1 != None:
+                    potentialCluster1.addOneRowToCluster(node2)
+                    cluster = potentialCluster1
+                else:
+                    potentialCluster2 = self.findIfNodeIsClusterInClusterList(node2)
+                    if potentialCluster2 != None:
+                        potentialCluster2.addOneRowToCluster(node1)
+                        cluster = potentialCluster2
+                    else:
+                        cluster = self.createNewCluster(node1)
+                        cluster.addOneRowToCluster(node2)
+
+                self.listOfClusters.append(cluster)           
+
+                # Figure out how to add cluster if we only updated it.
+                
+                resultGraph = nx.contracted_nodes(resultGraph, node1, node2)
+            print("Size of result edges after contraction:", len(resultGraph.edges))
                 
             
-        
-        final_clusters = self.G.nodes
+        final_clusters = resultGraph.nodes
 
- 
-        #print("Created cluster list of length: ", len(final_clusters))
-
-        # Iterate final clusters
-        for c in final_clusters: 
-            #print("length of cluster",len(c), " ", c)
-            # size at least sm
-            #print(len(c))
-            clus = self.createNewCluster(c)
-            lenOfClus = clus.getNumberOfStoredRows()
-            if  lenOfClus >= min_subset_size:
-                self.listOfClusters.append(c)
-                print(c)
-
-        # output M - returns list of clusters
-        #return (" Cluster list: ", result)
+       
         print("Created cluster list of length: ", len(self.listOfClusters))
         return self.listOfClusters
 
-    def initaliseVertices(self, Db):
+    def findIfNodeIsClusterInClusterList(self, node1):
+        for cluster in self.listOfClusters:
+            for row in cluster.getClusterRowObjList():
+                if node1 == row:
+                    return cluster
+        return None
+
+
+    def initaliseVertices(self, Db, G):
         # add vertices
         for row in Db:
+            assert type(row) == Row
             vert = row#.encodedRowString
-            self.G.add_node(vert)
-        return list(self.G.nodes)
+            G.add_node(vert)
+        
+        return list(G.nodes)
 
-    def findMatchesinDB(self, Db, vertice):
-        indexerExists = False
-        if self.indexer != None:
-            assert type(self.indexer) == Indexer
-            self.indexer.initialIndexBuild(Db)
-            indexerExists = True
-            print("USING INDEXER")
-
+    def findMatchesinDB(self, Db, vertice, indexerExists=False):
         foundMatch = False
+
         if indexerExists:
-            rows = self.indexer.getRowsWithAtLeast1SameKey(row)
+            rows = self.indexer.getRowsWithAtLeast1SameKey(vertice)
+            #print("Comparing vertice with", len(rows), "rows")
             for row in rows:
-                foundMatch = self.findMatch()
+                assert type(row) == Row
+                foundMatch = self.findMatch(row,vertice)
                 if foundMatch == True:
-                    break    
+                    break                       
+                    
         else:
-            for row in Db:    
-                foundMatch = self.findMatch()
+            for row in Db:  
+                assert type(row) == Row  
+                foundMatch = self.findMatch(row,vertice)
                 if foundMatch == True:
                     break    
-            
 
     def findMatch(self,row,vertice):
-        exactMatch = row.count(vertice)
+        assert row != None
+        assert vertice != None
+        exactMatch = row.encodedRowString.count(vertice.encodedRowString)
         if exactMatch == 1:
-            print("Added record to graph because exact same encoding")
             self.G.add_edge(vertice, row, sim = 1)
             return True
         else:
-            # calculate similarity between first party records and other records
-            # metrics.testStart() 
-            sim_val = self.sim(row.encodedRowString,vertice.encodedRowString)
-            # metrics.testFinish() # Calculate an average time and output with the For vertice line
+            sim_val = self.sim(row.encodedRowString, vertice.encodedRowString)
             if sim_val >= self.min_similarity_threshold:
-                # add edges - does not match exactly
-                
+                # add edges
                 self.G.add_edge(vertice, row, sim = sim_val)   # This line should be used more carefully to optimise performance
                 return True
             else:

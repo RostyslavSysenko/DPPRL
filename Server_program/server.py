@@ -183,19 +183,18 @@ class Server:
             print("There are only ", dbCount, " databases, 3 are required.")
 
         # Initialise indexer
-        print("Indexer calling")
+        print("Initialising Indexer")
         listTuples = self.indexerFormatting()
         self.indexer = Indexer(50,listTuples) # Using 50 bit length hardcoded
 
         print("Static Linkage Module calling...")
-
         # Initialise staticLinker
-        staticLink = staticLinker(indexer=self.indexer)
+        staticLink = staticLinker(indexer=self.indexer, metricsIn=self.metric)
 
         self.metric.beginLinkage
         output = staticLink.staticLinkage(dbs)
         self.metric.finishLinkage()
-        print("Static Linkage Module finished (Successfully?)")
+        print("Static Linkage Module finished")
         for cluster in output:
             assert type(cluster) == Cluster
             self.clusterlist.addClusterStaticly(cluster)
@@ -208,7 +207,9 @@ class Server:
         Hardcoded to use the first encoded integer attribute which is zipcode.
         """     
         returnVal = list()
-        zipcode = tuple(("IntegerAttribute_1",4))
+        city = tuple(("StringAttribute_3",2))
+        returnVal.append(city)
+        zipcode = tuple(("IntegerAttribute_1",3))
         returnVal.append(zipcode)
         return returnVal
       
