@@ -7,6 +7,7 @@ sys.path.append(parentdir)
 from data_structures.Utilities import *
 from communication.metrics import *
 from data_structures.Indixer import Indexer
+import json
 
 
 class staticLinker:
@@ -188,7 +189,7 @@ class staticLinker:
 
                 # Figure out how to add cluster if we only updated it.
                 
-                resultGraph = nx.contracted_nodes(resultGraph, node1, node2)
+                #resultGraph = nx.contracted_nodes(resultGraph, node1, node2)
             print("Size of result edges after contraction:", len(resultGraph.edges))
                 
             

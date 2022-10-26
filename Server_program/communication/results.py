@@ -1,3 +1,4 @@
+import sys, os
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.ClusterList import ClusterList

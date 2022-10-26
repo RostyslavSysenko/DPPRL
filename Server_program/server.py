@@ -26,7 +26,7 @@ class Server:
         self.maxConnections = maxConnections
         self.connectedClients = []
         self.indexer = None
-        self.clusterlist = ClusterList()
+        self.clusterlist = ClusterList(certaintyThreshold = 0.8,clusterAggrFunction = AggrFunct.MEAN,indexer = self.indexer)
 
         self.metric = metrics(self)
         self.startTime = 0
@@ -186,6 +186,7 @@ class Server:
         print("Initialising Indexer")
         listTuples = self.indexerFormatting()
         self.indexer = Indexer(50,listTuples) # Using 50 bit length hardcoded
+        self.clusterlist.__indexer = self.indexer
 
         print("Static Linkage Module calling...")
         # Initialise staticLinker
