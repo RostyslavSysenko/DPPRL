@@ -3,6 +3,7 @@ parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.ClusterList import ClusterList
 
+
 class metrics:
     """
     This class stores and finds metrics relating to the linkage unit.
@@ -44,8 +45,14 @@ class metrics:
     def updateClusters(self,clustList):
         self.clusterList = clustList
 
-    def findAverageClusterPurity(self):
+    def findAverageClusterPurity(self,averageClusterPurity):
         # 
+
+        contingency_matrix = metrics.cluster.contingency_matrix(averageClusterPurity, ClusterList)
+# return purity
+        return sum(amax (contingency_matrix, axis=0)) / sum(contingency_matrix)
+
+
         pass
 
     def findPerfectClusterPercentage(self):
