@@ -195,8 +195,9 @@ class frequencyAttack:
 
         # Sort into descending order
         frequencies.sort()
-        for encoding in Attribute
+        for encoding in AttributeFreq:
             # Append to outputList in order of highest to lowest
+            pass
             
 
         print(outputList)

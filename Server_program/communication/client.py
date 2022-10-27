@@ -80,7 +80,9 @@ class client:
             if self.connectedServer.clusterlist.clusterAggregations:
                 self.staticNotDone = False
                 #print("CLUSTER AGGREGATIONS:",self.connectedServer.clusterlist.clusterAggregations)
-                self.connectedServer.clusterlist.addRowDynamic(newRow)
+                self.connectedServer.metric.startDynamicInsert()
+                self.connectedServer.clusterlist.addRowDynamic(newRow, DynamicClusterer())
+                self.connectedServer.metric.finishDynamicInsert()
             elif self.staticNotDone:
                 pass
             else:
@@ -114,12 +116,11 @@ class client:
             # Find ground truth using rec_ids
             print("Ground truth requested.")
             self.connectedServer.findGroundTruth()
+            self.send("ACK")
 
-        if rcvd.startswith("BITLENGTH"):
-            # Bit length used for indexer
-            split = rcvd.split(" ")
-            bitlen = split[1]
-            self.connectedServer.bitlength = bitlen
+        if rcvd.startswith("METRICS"):
+            print("Metrics requested")
+            self.connectedServer.displayMetrics()
 
         # if rcvd.startswith("")
         # More commands to be entered here

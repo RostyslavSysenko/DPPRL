@@ -183,9 +183,11 @@ class Server:
             print("There are only ", dbCount, " databases, 3 are required.")
 
         # Initialise indexer
+        bitLength = 50
+
         print("Initialising Indexer")
         listTuples = self.indexerFormatting()
-        self.indexer = Indexer(50,listTuples) # Using 50 bit length hardcoded
+        self.indexer = Indexer(bitLength,listTuples) # Using 50 bit length hardcoded
         self.clusterlist.__indexer = self.indexer
 
         print("Static Linkage Module calling...")
@@ -227,7 +229,10 @@ class Server:
             rowListInput.append(clients.rowList)
 
         self.metric.findGroundTruth(rowListInput)
-        pass
+
+    def displayMetrics(self):
+        self.metric.updateClusters(self.clusterlist)
+        self.metric.displayLatest()
 
 def main():
     # USAGE:

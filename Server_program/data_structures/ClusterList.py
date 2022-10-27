@@ -4,8 +4,7 @@ parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.Utilities import *
 from data_structures.Indixer import * # Indexer
-from data_structures.ClusterList import *
-from clustering.DynamicClustering import *
+#from clustering.DynamicClustering import *
 
 class ClusterList:
     """
@@ -40,6 +39,14 @@ class ClusterList:
 
     def blockingTurnedOn(self):
         return self.__indexer is not None
+
+    def listOfClustersTo2DArrayOfClustAggr(clusterList):
+        clusterListRepr2D = list()
+
+        for cluster in clusterList:
+            clusterListRepr2D.append(cluster.getClusterListRepresentation())
+            
+        return clusterListRepr2D
 
     def __addNewClusterToClusterList(self,clusterObj):
         # insertion
@@ -76,7 +83,7 @@ class ClusterList:
 
         return rowList
 
-    def addRowDynamic(self, row):
+    def addRowDynamic(self, row, DynamicClusterer):
         """ 
         input: Row object (which is found in Utilities folder i think)
 

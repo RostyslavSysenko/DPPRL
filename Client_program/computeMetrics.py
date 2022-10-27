@@ -11,8 +11,11 @@ def main():
     attributeTypesList = argHandler.defineAttributeTypes()   
     encoder = FileEncoder(argHandler=argHandler)
     encoder.connectToServer(host, port) 
-    print("QUITTING") 
-    encoder.send("TRUTH")
+    
+    # Connect to server and tell them to:
+    encoder.send("TRUTH") # Compute ground truth + list of clusters based on rowId.
+    encoder.waitForAcknowledge()
+    encoder.send("METRICS")
 
 if __name__ == "__main__":
     main()

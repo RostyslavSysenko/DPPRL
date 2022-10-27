@@ -55,14 +55,7 @@ class FileEncoder:
         # Populate encodedAttributesOfRow using the INT/STR attribute type key
         #print("Attempting to use attributeTypesList of datatype: ",type(self.attributeTypesList))
         for attributeIdx in range(0, len(self.attributeTypesList)):
-            currentAttribute = self.recordDict[rec][attributeIdx]
-            if currentAttribute == None:
-                print("Current attribute did not exist.")
-                break
-            if currentAttribute == '':
-                print("Current attribute did not exist.")
-                break
-
+            currentAttribute = self.recordDict[rec][attributeIdx]         
 
             encodedAttribute = None
             attributeType = self.attributeTypesList[attributeIdx]
@@ -208,7 +201,19 @@ class FileEncoder:
             cmd = "DYNAMIC INSERT " + str(r)
             self.send(cmd)
             self.waitForAcknowledge()
-        pass
+
+    def checkRecordComplete(self, rec):
+        for attributeIdx in range(0, len(self.attributeTypesList)):
+            currentAttribute = self.recordDict[rec][attributeIdx]
+            if currentAttribute == None:
+                print("Current attribute did not exist.")
+                return False
+            if currentAttribute == '':
+                print("Current attribute did not exist.")
+                return False
+        
+        # If runs through without returning False,
+        return True
 
 def main():
     # USAGE:
@@ -235,7 +240,10 @@ def main():
 
     # Perform encoding
     for record in clientEncoder.recordDict:
-        if record != None:
+        # Only encode records that are complete
+        recordContainsAllFields = clientEncoder.checkRecordComplete(record)
+
+        if (record != None) & recordContainsAllFields:
             encodedAttributes = clientEncoder.encodeByAttribute(bf, record)
             #print(encodedAttributes)
             jsonEncodedRecord = clientEncoder.toJson(encodedAttributes)

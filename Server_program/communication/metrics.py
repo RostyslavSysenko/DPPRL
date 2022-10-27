@@ -1,7 +1,7 @@
 import os, sys
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
-
+from data_structures.ClusterList import ClusterList
 
 class metrics:
     """
@@ -21,28 +21,34 @@ class metrics:
         # Data needed in memory for metric calculation
         self.initialRuntime = 0
 
+        # Average runtime for dynamic insert
+        self.dynamicRuntimes = []
+
+        self.clusterList = None
+
     def update(self):
         self.findAverageClusterPurity()
         self.findPerfectClusterPercentage()
-        self.findClustersWithMatches
+        self.findClustersWithMatches()
 
     def display(self): 
         # Print metrics to the server console
         print("Average Cluster Purity:", self.averageClusterPurity)
         print("Perfect Clusters: ", self.perfectClustersPercent)
+        print("Clusters with matches: ", self.clustersWithMatches)
 
     def displayLatest(self):
         self.update()
         self.display()
 
-    def findAverageClusterPurity(self, clusList):
+    def updateClusters(self,clustList):
+        self.clusterList = clustList
+
+    def findAverageClusterPurity(self):
         # 
-       
+        pass
 
-        self.averageClusterPurity/self.perfectClustersPercent
-        print
-
-    def findPerfectClusterPercentage():
+    def findPerfectClusterPercentage(self):
         # 
 
         pass
@@ -66,15 +72,46 @@ class metrics:
 
         print("Found",matches,"matches in rowLists using rec_id for ground truth")
 
+    def averageDynamicRuntime(self):
+        total = 0
+        for runtime in self.dynamicRuntimes:
+            total += runtime
 
-            
+        dynamicInsertionCount = len(self.dynamicRuntimes)
+        average = total / dynamicInsertionCount
+        return average
 
+    def startDynamicInsert(self):
+        currentRuntime = self.linkageUnit.runtime()
+        # Store current runtime in memory.
+        self.initialRuntime = currentRuntime
 
+    def finishDynamicInsert(self):
+        currentRuntime = self.linkageUnit.runtime()
+        insertTime = currentRuntime - self.initialRuntime
+        self.dynamicRuntimes.append(insertTime)
+
+        dynamicInsertionCount = len(self.dynamicRuntimes)
+
+        if dynamicInsertionCount % 500 == 0:
+            averageDynamicTime = self.averageDynamicRuntime()
+
+            print("Average dynamic insertion time:", averageDynamicTime)
+ 
 
     def findClustersWithMatches(self):
-        # Number of clusters with between 2 and 5 rows in them
-        
-        pass
+        # Count number of clusters with between 2 and 5 rows in them
+        assert type(self.clusterList) == ClusterList
+
+        clusterWithMatches = 0
+        for cluster in self.clusterList.clusterList:
+            rowCount = cluster.getNumberOfStoredRows()
+            if (rowCount >= 2) | (rowCount <= 5):
+                clusterWithMatches += 1
+
+        self.clustersWithMatches = clusterWithMatches
+        print(clusterWithMatches)
+        return clusterWithMatches
 
     def beginLinkage(self):
         currentRuntime = self.linkageUnit.runtime()
