@@ -48,9 +48,9 @@ class metrics:
     def findAverageClusterPurity(self,averageClusterPurity):
         # 
 
-        contingency_matrix = metrics.cluster.contingency_matrix(averageClusterPurity, ClusterList)
+       # contingency_matrix = metrics.cluster.contingency_matrix(averageClusterPurity, ClusterList)
 # return purity
-        return sum(amax (contingency_matrix, axis=0)) / sum(contingency_matrix)
+       # return sum(amax (contingency_matrix, axis=0)) / sum(contingency_matrix)
 
 
         pass
