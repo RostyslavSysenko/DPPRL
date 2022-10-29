@@ -1,4 +1,5 @@
 import os, sys
+from Server_program.data_structures.Utilities import Cluster
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.ClusterList import ClusterList
@@ -61,23 +62,27 @@ class metrics:
         pass
 
     def findGroundTruth(self,rowLists):
-        matches = 0
-        rowListCount = len(rowLists)
-        # For rowList i, - 1, 2, 3, 4, 5
-        for i in range(rowListCount):
-            rowListOrigin = rowLists[i]
-            # For rowlist being compared, rowList > i
-            for rowListCompare in rowLists:
-                if rowLists.index(rowListCompare) <= i:
-                    continue
-                else:
-                    for row in rowListOrigin:
-                        rec_id = row.rowId
-                        for otherRow in rowListCompare:
-                            if rec_id == otherRow.rowId:
-                                matches += 1
+        # Computing the ground truth clusterlist using rec_id's.
+        # Find unique rec_ids
+        uniqueRowIds = []
+        clusters = []
+        for rowList in rowLists:
+            for row in rowList:
+                rec_id = row.rowId
+                if rec_id not in uniqueRowIds:
+                    uniqueRowIds.append(row.rowId)                  
 
-        print("Found",matches,"matches in rowLists using rec_id for ground truth")
+        print("Number of unique rec_ids:",len(uniqueRowIds))
+        # Create clusters for each unique rec_id and populate those clusters.
+        for id in uniqueRowIds:
+            cluster = Cluster(id)
+            for rowList in rowLists:
+                for row in rowList:
+                    if row.rowId == id:
+                        cluster.addOneRowToCluster(row)
+            clusters.append(cluster)
+
+        print("Found",len(clusters),"matches using rec_id for ground truth")
 
     def averageDynamicRuntime(self):
         total = 0

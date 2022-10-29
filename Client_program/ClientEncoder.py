@@ -1,22 +1,19 @@
-from BloomFilter import *;
-import pickle # For CSV save() option -s
+from BloomFilter import *
 import socket
 import json
 import sys
 from argumentHandler import *
-from fieldtype import FieldType
 
 class FileEncoder:
     """
     This class is called on a data provider's computer and 
     """
-    def __init__(self, argHandler=argumentHandler(sys.argv)): #attributeTypesList, fileLocation):       # Only input to initialise should be the argumentHandler object
+    def __init__(self, bf, argHandler=argumentHandler(sys.argv)): # Only input to initialise should be the argumentHandler object
         argHandler.handleArguments
         if argHandler.attributeList == None:
             argHandler.defineAttributeTypes()
-        self.attributeTypesList = argHandler.attributeList#attributeTypesList
-        self.fileLocation = argHandler.fileLocation #fileLocation     
-        self.clusterlist = None          
+        self.attributeTypesList = argHandler.attributeList
+        self.fileLocation = argHandler.fileLocation          
     
         self.host = "127.0.0.1"
         self.port = 43555
@@ -91,18 +88,14 @@ class FileEncoder:
         for i in range(0, headRowNumber):
             print(self.jsonEncodings[i])
 
-    def saveEncodings(self): # NOT WORKING
-        # save self.encodings (list of encoded records stored as strings)
-        outputFile = "Encodings.csv"
-        outputFormatted = self.encodingsToCsvFormat()
-        with open(outputFile, "wb") as output:
-            pickle.dump(outputFormatted, output)
-        pass
-    
-    def encodingsToCsvFormat(self):
-        # Extra functionality for product delivery
-        pass
+    def saveEncodings(self):
+        jsonFileName = "encodings.json"
+        print("Saving JSON list to file: ", jsonFileName)
+        with open(jsonFileName, 'w') as file:
+            json.dump(self.jsonEncodings, file, indent=1)
 
+        # Currently outputs a bunch of \n newline characters 
+        
     def sendEncodingsStatic(self, json=True):   
         # Send the encodings for static linkage
         print("Sending encoded data")
@@ -148,8 +141,8 @@ class FileEncoder:
             attributeName = str(attribute.name)
             attributeIsId = False
 
-            # Determine which attribute, then decide how to name
-            if attributeName == "NOT_ENCODED": # Only 1 value is not encoded so counting is not required (unique identifier)
+            # Determine which attribute type, then decide how to name
+            if attributeName == "NOT_ENCODED": # Only 1 value is not encoded so counting is not required (we assume this is the unique identifier)
                 attributeIsId = True
                 name = "rowId"
             elif attributeName == "STR_ENCODED":
@@ -191,7 +184,7 @@ class FileEncoder:
         if type(thisRecordJson) == str: # JSON objects are stored as strings in python.
             self.jsonEncodings.append(thisRecordJson)
         else:
-            print("ERROR APPENDING JSON RECORD TO LIST")
+            print("Error appending json record to list, datatype was not a string!")
         return thisRecordJson
 
     def sendEncodingsDynamic(self):
@@ -206,13 +199,13 @@ class FileEncoder:
         for attributeIdx in range(0, len(self.attributeTypesList)):
             currentAttribute = self.recordDict[rec][attributeIdx]
             if currentAttribute == None:
-                print("Current attribute did not exist.")
+                print("Attribute in record did not exist, record completion check failed.")
                 return False
             if currentAttribute == '':
-                print("Current attribute did not exist.")
+                print("Attribute in record did not exist, record completion check failed.")
                 return False
         
-        # If runs through without returning False,
+        # If runs without returning False,
         return True
 
 def main():
@@ -220,22 +213,9 @@ def main():
     # ClientEncoder.py -options FileToBeEncoded host:port    
     argHandler = argumentHandler(sys.argv)
     argHandler.handleArguments()
+    bf = argHandler.findBloomFilterConfig()
 
-    # Bloom filter configuration settings
-    # To Do: Move to a separate configuration file [bloomfilter.ini] - in progress
-    bf_len = 50
-    bf_num_hash_func = 2
-    bf_num_inter = 5
-    bf_step = 1
-    max_abs_diff = 20
-    min_val = 0
-    max_val = 100
-    q = 2
-
-    bf = BF(bf_len, bf_num_hash_func, bf_num_inter, bf_step,
-            max_abs_diff, min_val, max_val, q)
-
-    clientEncoder = FileEncoder(argHandler=argHandler)
+    clientEncoder = FileEncoder(bf,argHandler=argHandler)
     clientEncoder.nameAttributes(argHandler)
 
     # Perform encoding
@@ -244,22 +224,23 @@ def main():
         recordContainsAllFields = clientEncoder.checkRecordComplete(record)
 
         if (record != None) & recordContainsAllFields:
-            encodedAttributes = clientEncoder.encodeByAttribute(bf, record)
+            encodedAttributes = clientEncoder.encodeByAttribute(bf,record)
             #print(encodedAttributes)
             jsonEncodedRecord = clientEncoder.toJson(encodedAttributes)
             #print(jsonEncodedRecord)
 
-    # Diplay the first 5 encodings and then attempt to connect to the server
+
+    # Diplay the first 5 encodings
     print("Sample of encoded data:")
     clientEncoder.display(5)
-    clientEncoder.connectToServer(argHandler.host, argHandler.port)  
-
-    # If -s then save encodings in CSV (final delivery / D7, not currently working)
+    # If -s then save encodings locally in json (final delivery / D7, not currently working)
     if argHandler.saveOption:
         clientEncoder.saveEncodings()
-    
+    # Attempt to connect to the server
+    clientEncoder.connectToServer(argHandler.host, argHandler.port)  
+
     if not argHandler.dynamicLinkage:       
-        # If static    
+        # Send static insertions
         clientEncoder.sendEncodingsStatic()
         clientEncoder.send("SAVE") # Tell server to save the received encodings after finished sending.
         clientEncoder.waitForAcknowledge()
@@ -268,13 +249,12 @@ def main():
             clientEncoder.send("STATIC LINK")
     
     if argHandler.dynamicLinkage:
-        # If dynamic
+        # Send dynamic insertions
         clientEncoder.sendEncodingsDynamic()
         clientEncoder.send("SAVE") # Tell server to save the received encodings after finished sending.
         clientEncoder.waitForAcknowledge()
-        # Stays running, reading the csv file for updates
 
-    # Close the socket and program
+    # Close the socket and exit the program when all encodings have been sent.
     clientEncoder.soc.close()
     
 if __name__ == "__main__":

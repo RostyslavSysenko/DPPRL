@@ -121,13 +121,13 @@ class staticLinker:
             tempGraph = nx.Graph()
             Graph_verts = self.initaliseVertices(DBs[i], tempGraph)
 
-            print("length of graph ", len(Graph_verts))
+            print("Nodes in new graph:", len(Graph_verts))
             # for DB in index > i 
             for Db in DBs:
                 if DBs.index(Db) <= i:
                     continue
 
-                print("length of current Db: ",len(Db))
+                print("Looking for matches in Db", DBs.index(Db), " which is of size:",len(Db))
                 counting = 0
 
                 indexerExist = False
@@ -145,14 +145,14 @@ class staticLinker:
                     self.findMatchesinDB(Db, vertice, indexerExists=indexerExist)
 
             G_edges = list(self.G.edges)
-            print("Initial length of G_edges:", len(G_edges))
+            print("Initial length of G_edges was", len(G_edges))
 
             G_edges_weighted = list(self.G.edges(data=True))
             opt_E = nx.max_weight_matching(self.G)
             # iterate edges
             #print("Type of opt_E",type(opt_E))
             check_vals = list(opt_E)
-            print("Length of check_vals:", len(check_vals))
+            #print("Length of check_vals:", len(check_vals))
 
             for outer in check_vals:
                 resultGraph.add_edge(*outer)
@@ -164,7 +164,7 @@ class staticLinker:
             #iterate remaining edges 
             #merge cluster vertices 
             Result_edges = list(resultGraph.edges)
-            print("Size of resultGraph.edges before contraction:", len(Result_edges))
+            print("Size of result edges", len(Result_edges))
             for edges in list(Result_edges):
                 node1 = edges[0]
                 node2 = edges[1]
@@ -190,7 +190,7 @@ class staticLinker:
                 # Figure out how to add cluster if we only updated it.
                 
                 #resultGraph = nx.contracted_nodes(resultGraph, node1, node2)
-            print("Size of result edges after contraction:", len(resultGraph.edges))
+            print("Current size of clusterlist before next iteration:", len(self.listOfClusters))
                 
             
         final_clusters = resultGraph.nodes

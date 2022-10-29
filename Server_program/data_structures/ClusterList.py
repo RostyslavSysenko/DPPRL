@@ -111,8 +111,30 @@ class ClusterList:
         if self.blockingTurnedOn(): #keep the indexing dictionary up to date
             self.__indexer.updateIndexingDictOnInsert(insertedRow=row)
 
+    def loadFromFile(self, stringFromFile):
+        # Loads in the string representation of clusterlist from the output file.
+        # We can do the same file.readline() method for this one too if it's going to be easier.
+        assert type(stringFromFile) == str
+        pass
+
+    def buildFromFile(self,clustersFile):
+        """
+        One file stores the string representation of a ClusterList, another stores the string of each cluster.
+
+        def saveClusters(self, ClusterList):
+            for cluster in ClusterList.clusterList:
+                print(cluster, file=open(self.saveFilenameC, "a")) 
+                This part is here to show you how it's been saved.
+
+        clustersFile.readline() should produce a cluster string representation, loop through adding these to clusterlist.
+        """
+
+        pass
+
+
 
     def __str__(self) -> str:
+        # All this needs is a change to a format delimited by a unique string (for example: ":::") so that you can string.split and string.strip back into their datatypes ie list(), AggrFunc(). 
         returnedStr = "\n" + "largestOccupiedIndex : " + str(self.nextAvailIndex-1) +  "\n" + "cluster aggr function: " + str(self.clusterAggrFunction) + "\n" +"clusterReps: " + str(self.clusterAggregations) +"\n"+"numberOfItemsInEachCluster: ["
 
         for cluster in self.clusterList:

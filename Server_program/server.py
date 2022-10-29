@@ -9,6 +9,7 @@ from data_structures.ClusterList import ClusterList
 from communication.client import client
 from communication.serverArgHandler import argumentHandler
 from communication.metrics import metrics
+from communication.results import results
 from data_structures.Indixer import Indexer
 
 #from clustering import IncrementalClusterInput
@@ -30,6 +31,7 @@ class Server:
 
         self.metric = metrics(self)
         self.startTime = 0
+        self.result = results()
 
     def runtime(self):
         return time.time() - self.startTime
@@ -89,10 +91,13 @@ class Server:
             newClient = client(client_socket, client_addr, self)
         self.connectedClients.append(newClient)
 
-    def launchServer(self):
+    def launchServer(self, loadingClusterList=False):
         # a forever loop until we interrupt it or an error occurs
         self.run = True        
         self.startTime = time.time()
+
+        if loadingClusterList:
+            self.result.loadClusterList(linkageUnit=self)
 
         while self.run:
             events = self.selector.select(timeout=200) # Select a read or write event on the socket to execute
@@ -233,6 +238,8 @@ class Server:
     def displayMetrics(self):
         self.metric.updateClusters(self.clusterlist)
         self.metric.displayLatest()
+        self.result.saveClusterList(self.clusterlist)
+        self.result.saveClusters(self.clusterlist)
 
 def main():
     # USAGE:
@@ -244,7 +251,10 @@ def main():
 
     server = Server(maxConns)
     server_socket = server.setUpSocketOnCurrentMachine(port)
-    server.launchServer()
+    if argHandler.loadFromFile:
+        server.launchServer(loadingClusterList=argHandler.loadFromFile)
+    else:
+        server.launchServer()
     server.shutdown()
 
 if __name__ == "__main__":

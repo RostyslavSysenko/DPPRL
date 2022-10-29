@@ -5,6 +5,7 @@ class argumentHandler:
         self.argv = argv
         self.port = 43555 # Default
         self.maxConnections = 15 # Default
+        self.loadFromFile = False
         
     
     def handleArguments(self):
@@ -56,14 +57,13 @@ class argumentHandler:
                 # Handle options 
                 for char in optionArgument:
                     # Options: NOT DECIDED/SPECIFIED YET
-                    if char == "s":
-                        pass
+                    if char == "f":
+                        self.loadFromFile = True
 
                     if char == "l":
                         pass
 
-                    if char == "d":
-                        pass
+
         return isOptions
 
     def definePreviousConnections(self):
