@@ -29,10 +29,12 @@ class client:
         self.socket = soc
         self.address = address
         self.connectedServer = connserver
-        self.encodedRows = []
+        self.rowList = []
         self.jsonRecords = []
         self.jsonFileName = str(self.clientId) + "_records.json"
         print("New client with json filename: ", self.jsonFileName)
+
+        self.staticNotDone = False # Used to only print error message once per client who attempts dynamic.
 
     def send(self, message):
         message = str(message)
@@ -58,14 +60,8 @@ class client:
             self.jsonRecords.append(recJson)
             dumpedJson = json.dumps(recJson)
             newRow = Row.parseFromJson(dumpedJson)
-
-            """ This should become redundant as STATIC LINK deals with this
-            newCluster = Cluster(newRow.rowId)
-            newCluster.addOneRowToCluster(newRow)
-            self.connectedServer.clusterlist.addClusterStaticly(newCluster) 
-            """
-            
-            #self.encodedRows.append(newRow)                
+            self.rowList.append(newRow) 
+          
             # Acknowledge received so the client can continue. 
             self.send("ACK")
                                   
@@ -73,11 +69,28 @@ class client:
         if rcvd.startswith("DYNAMIC INSERT"):
             # Receive encoding
             rec = rcvd.strip("DYNAMIC INSERT ")
-            recJson = json.loads(rec)    
-            print(recJson)  
+            recJson = json.loads(rec)
+            recJson["DBId"] = self.clientId
+
             self.jsonRecords.append(recJson)
+            dumpedJson = json.dumps(recJson)
             newRow = Row.parseFromJson(dumpedJson)
-            self.connectedServer.clusterlist.addRowDynamic(newRow)
+
+            # Check if there are cluster aggregations from successful static linkage.
+            if self.connectedServer.clusterlist.clusterAggregations:
+                self.staticNotDone = False
+                #print("CLUSTER AGGREGATIONS:",self.connectedServer.clusterlist.clusterAggregations)
+                self.connectedServer.metric.startDynamicInsert()
+                self.connectedServer.clusterlist.addRowDynamic(newRow, DynamicClusterer())
+                self.connectedServer.metric.finishDynamicInsert()
+            elif self.staticNotDone:
+                pass
+            else:
+                self.staticNotDone = True
+                print("ERROR UNABLE TO DYNAMICALLY LINK: No cluster aggregations, please complete static linkage first.")
+
+            # Acknowledge received so the client can continue. 
+            self.send("ACK")
 
         if rcvd.startswith("DYNAMIC UPDATE"):
             pass
@@ -97,6 +110,17 @@ class client:
         if rcvd.startswith("SAVE"):
             self.saveToJson() # Move this function call if needed to reduce amount of writes to disk (optimise)
             self.send("ACK") 
+
+        if rcvd.startswith("TRUTH"):
+            # Command should be better named
+            # Find ground truth using rec_ids
+            print("Ground truth requested.")
+            self.connectedServer.findGroundTruth()
+            self.send("ACK")
+
+        if rcvd.startswith("METRICS"):
+            print("Metrics requested")
+            self.connectedServer.displayMetrics()
 
         # if rcvd.startswith("")
         # More commands to be entered here

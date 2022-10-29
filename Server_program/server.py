@@ -9,6 +9,8 @@ from data_structures.ClusterList import ClusterList
 from communication.client import client
 from communication.serverArgHandler import argumentHandler
 from communication.metrics import metrics
+from communication.results import results
+from data_structures.Indixer import Indexer
 
 #from clustering import IncrementalClusterInput
 #from clustering import DynamicClustering
@@ -25,10 +27,11 @@ class Server:
         self.maxConnections = maxConnections
         self.connectedClients = []
         self.indexer = None
-        self.clusterlist = ClusterList()
+        self.clusterlist = ClusterList(certaintyThreshold = 0.8,clusterAggrFunction = AggrFunct.MEAN,indexer = self.indexer)
 
         self.metric = metrics(self)
         self.startTime = 0
+        self.result = results()
 
     def runtime(self):
         return time.time() - self.startTime
@@ -88,10 +91,13 @@ class Server:
             newClient = client(client_socket, client_addr, self)
         self.connectedClients.append(newClient)
 
-    def launchServer(self):
+    def launchServer(self, loadingClusterList=False):
         # a forever loop until we interrupt it or an error occurs
         self.run = True        
         self.startTime = time.time()
+
+        if loadingClusterList:
+            self.result.loadClusterList(linkageUnit=self)
 
         while self.run:
             events = self.selector.select(timeout=200) # Select a read or write event on the socket to execute
@@ -155,7 +161,8 @@ class Server:
 
 
     def doStaticLinkage(self, json=True):
-        # Perform hungarian algorithm on 3 inputs
+        self.clusterlist = ClusterList(indexer=self.indexer)
+        # Perform blossom algorithm on 3 inputs
 
         # Purpose of this function is for demonstration, we will be using first 3 
         # databases as a staticly linked starting point then add 2 more dynamically
@@ -163,24 +170,16 @@ class Server:
         # Input should be all 3 clients records who have sent operation STATIC INSERT.
         foundDb = 0
         dbs = []
-        if json:
-            for clients in self.connectedClients:
-                assert clients.jsonRecords != None
-                if foundDb < 3:
-                    staticRecordList = self.staticLinkageFormatting(clients)
-                    dbs.append(staticRecordList)
-                    foundDb += 1
-                # find 3 clients
-                # make a list of records that are stored as format [rowId, concatenated encodings]
-                # pass to db1/2/3 parameters
-                pass
-        else:
-            for clients in self.connectedClients:
-                assert clients.encodedRecords != None
-                if foundDb < 3:
-                    dbs.append(clients.encodedRecords)
-                    foundDb += 1
+        for clients in self.connectedClients:
+            assert clients.rowList != None # This indicates static data, if static is done after dynamic this will fail.
+            if foundDb < 3:
+                #staticRecordList = self.staticLinkageFormatting(clients)
+                dbs.append(clients.rowList)
+                foundDb += 1
         
+        # Static linkage with 3 databases
+        # To-Do: Scalable for more than 3, ie any databases entered statically before a static link is called (-l)
+
         dbCount =len(dbs)
         if dbCount > 3:
             print("MORE THAN 3 DATABASES")
@@ -189,80 +188,58 @@ class Server:
             print("There are only ", dbCount, " databases, 3 are required.")
 
         # Initialise indexer
-        print("Indexer calling")
+        bitLength = 50
+
+        print("Initialising Indexer")
         listTuples = self.indexerFormatting()
-        self.indexer = Indexer(4,listTuples)
+        self.indexer = Indexer(bitLength,listTuples) # Using 50 bit length hardcoded
+        self.clusterlist.__indexer = self.indexer
 
         print("Static Linkage Module calling...")
-
-        # Static linkage with 3 databases
-        # To-Do: Scalable for more than 3, ie all databases entered statically
-        #statLinker = StaticLinker()
-
-        self.clusterlist = ClusterList(indexer=self.indexer)
+        # Initialise staticLinker
+        staticLink = staticLinker(indexer=self.indexer, metricsIn=self.metric)
 
         self.metric.beginLinkage
-        output = staticLinkage(dbs[0],dbs[1],dbs[2])
+        output = staticLink.staticLinkage(dbs)
         self.metric.finishLinkage()
-        print("Static Linkage Module finished (Successfully?)")
+        print("Static Linkage Module finished")
         for cluster in output:
             assert type(cluster) == Cluster
             self.clusterlist.addClusterStaticly(cluster)
-        print("Clusters added to linkage unit")
-        #self.clusterlist = output
+        print("Static Clusters added to linkage unit")
 
-
-
-
-        # SHUTDOWN AFTER COMPLETION
-        self.shutdown()
 
     def indexerFormatting(self):
         """
-        This class takes the json formatted records and makes them compatible with Indexer module.
+        This function returns the input required for Indexer module. 
+        Hardcoded to use the first encoded integer attribute which is zipcode.
         """     
-        return tuple()
-
-
-    def staticLinkageFormatting(self, clientObj, force=False):  
-        """
-        This class takes the json formatted records and makes them compatible with staticLinkage module.
-        """     
-        # Check if formatting is required first.
-        formatRequired = True
-
-
-        if formatRequired:
-            print("Joining bloom filters")
-            staticRecords = []
-            # Create format [[rowId, encodedAttributes],[rowId, encodedAttributes], [rowId, encodedAttributes], ... ]
-            for record in clientObj.jsonRecords:
-                staticRecord = []
-                staticRecord.append(record["rowId"]) # Field 1
-                concatBloomFilters = "".join(list(record["encodedAttributes"].values())) 
-                staticRecord.append(concatBloomFilters) # Field 2
-
-                # Changed format to dictionary to avoid error on staticLinkage.py: 48 (unhashable type 'dict')
-                #staticRecordDict = {}
-                #staticRecordDict[staticRecord[0]] = staticRecord[1]
-                #staticRecords.update(staticRecordDict) # Add to 'dbs'
-
-                staticRecords.append(staticRecord) # If using list input not dictionary
-                #print(staticRecord)
-            return staticRecords
-
-    def doDynamicLinkage(self):
-        # Update clusters
-        self.metric.beginLinkage()
-        pass              
-            
+        returnVal = list()
+        city = tuple(("StringAttribute_3",2))
+        returnVal.append(city)
+        zipcode = tuple(("IntegerAttribute_1",3))
+        returnVal.append(zipcode)
+        return returnVal
+      
     def saveConnectedClients(self):
         # Save current connections to "previousConnections.txt" for later reloading.
         # Stores each client object by mapping address to clientId
-        
-        # See 
 
         pass
+
+    def findGroundTruth(self):
+        rowListInput = []
+        for clients in self.connectedClients:
+            assert clients.rowList != None
+            rowListInput.append(clients.rowList)
+
+        self.metric.findGroundTruth(rowListInput)
+
+    def displayMetrics(self):
+        self.metric.updateClusters(self.clusterlist)
+        self.metric.displayLatest()
+        self.result.saveClusterList(self.clusterlist)
+        self.result.saveClusters(self.clusterlist)
 
 def main():
     # USAGE:
@@ -274,9 +251,11 @@ def main():
 
     server = Server(maxConns)
     server_socket = server.setUpSocketOnCurrentMachine(port)
-    server.launchServer()
+    if argHandler.loadFromFile:
+        server.launchServer(loadingClusterList=argHandler.loadFromFile)
+    else:
+        server.launchServer()
     server.shutdown()
-
 
 if __name__ == "__main__":
     main()

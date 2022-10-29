@@ -355,7 +355,7 @@ class BF():
 
 
 ##########################################################
-
+'''
 bf_len = 50 #50
 bf_num_hash_func = 2 #2
 bf_num_inter = 5
@@ -368,7 +368,7 @@ q = 2
 bf = BF(bf_len, bf_num_hash_func, bf_num_inter, bf_step,
           max_abs_diff, min_val, max_val, q)
 
-'''
+
 # Example code
 #numerical - integer
 val1 = 29

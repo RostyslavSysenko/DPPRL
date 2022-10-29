@@ -1,229 +1,261 @@
 import networkx as nx
 import random
 import numpy as np
+import sys, os
+parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(parentdir)
 from data_structures.Utilities import *
-from data_structures.ClusterList import *
 from communication.metrics import *
-
-def order(BF_list): 
-    
-    result = list(BF_list)
-    random.shuffle(result)
-
-    return result
-
-def sim(a, b):
-    # Debugging
-    #print("Length of a and b: ", len(a), ", ", len(b))
-
-    #common bit positions set to 1 
-    z = 0 
-    p = 2
-    
-    pos_counter = []
-    a_positions = []
-    b_positions = []
-    
-    for i in range(len(a)):
-        pos_counter.append(i)
-        if a[i] == '1': 
-            a_positions.append(pos_counter[i])
-    
-    pos_counter = []
-    for i in range(len(b)):
-        pos_counter.append(i)
-        if b[i] == '1': 
-            b_positions.append(pos_counter[i])
-    
-    common_pos = list(set(a_positions)&set(b_positions))
-    common_count = len(common_pos)
-    
-    z = common_count
-    
-    #bit positions set to 1 
-    l = 0 
-    
-    l_a = a.count('1')
-    l_b = b.count('1')
-    
-    if l_a > l_b:
-        l = l_a 
-    elif l_a < l_b: 
-        l = l_b
-    else: 
-        l = l_a 
-
-    
-    if z == 0:
-        sim=0
-    else: 
-        sim = p * z / (l+z)
-    
-    return sim
+from data_structures.Indixer import Indexer
+import json
 
 
-def staticLinkage(database1, database2, database3): 
-    # input 
-    # D --> Party 𝑃𝑖’s BFs 
-    DBs = [database1, database2, database3]
+class staticLinker:
+    def __init__(self, simThreshold=0.75, indexer=None, metricsIn=None):
+        self.min_similarity_threshold = simThreshold
+        self.G = nx.Graph()
+        self.listOfClusters = []
+        self.clusterId = 0
+        self.indexer = indexer
+        self.metric = metricsIn
 
-    num_of_parties = 3
+    def random_order(self, BF_list): 
+        
+        result = list(BF_list)
+        random.shuffle(result)
 
-    # B --> Blocks containing the union of blocks from all parties -> implement later
+        return result
 
-    # sim --> Similarity function
+    def sorted_order(self, BF_list): 
 
-    # ord --> Ordering function for incremental processing of databases : 
+        result = sorted(BF_list, key = len, reverse = True)
 
-    # map --> one to one mapping algo
+        return result
 
-    # min_similarity_threshold (st) --> Minimum similarity threshold to classify record sets
-    min_similarity_threshold = 0.75
-    # min_subset_size (sm) --> Minimum subset size, with 2 ≤ 𝑠𝑚 ≤ 𝑝
-    min_subset_size = 2
+    def sim(self, a, b):
+        # Debugging
+        #print("Length of a and b: ", len(a), ", ", len(b))
 
-    # output
-    # M - matching clusters
-    #intialisation 
-    clus_ID = 0
-    G = nx.Graph()
-    result = []
-
-    #order databases 
-    DBs = order(DBs)
-
-    #first party 
-    list_len = len(DBs[0])
-    #print("FIRST INDEX: ", DBs[0 or 1 or 2][[0,01000011][0,00100111] ... [1,0111010]])
-    
-    # Populate first 4999
-    assert list_len > 4998 & list_len < 5901 # ONLY FOR TESTING, REMOVE THIS LINE
-    for x in range(list_len):
-        print("Added all records from DB 1 to the graph.")
-        #add [1] to get rid of db index
-        cluster = DBs[0][x]
-        clus_ID += 1 
-        # add vertices
-        G.add_node(cluster[1])
-    
-    Graph_verts = list(G.nodes)
-    identifiedNonMatches = []
-
-    print("length of graph ", len(Graph_verts))
-    dbi =0
-    for Db in DBs:
-        dbi += 1
-        print("length of current Db",len(Db))
-
-        if(Db == DBs[0]):
-            continue
-        counting = 0
-        for vertice in Graph_verts:
-            # 
-            counting += 1
-            print("Comparing all recs from DB ", dbi," with vertice ", counting, " encoding on vert: ",  vertice)
-            for rec in Db:
-                recIdx = Db.index(rec)
-                thisRecordEncoding = rec[1]
-                rowIdOfMatched = rec[0]
-                # Find a way to store the rec[0] which is the rowId when it finds a match, then create a cluster object using that rowId.
-                # Initialise as Cluster(idOfMatched)
-
-                idMatch = rec[0].count(DBs[0][recIdx][0])
-                exactMatch = rec[1].count(vertice)
-                if exactMatch == 1:
-                    print("Added record to graph because exact same encoding")
-                    G.add_edge(vertice, thisRecordEncoding, sim = 1)
-                    break
-                if idMatch == 1:
-                    print("Added record to graph because id matched")
-                    G.add_edge(vertice, thisRecordEncoding, sim = 1)
-                    break
-                elif rec in identifiedNonMatches:
-                    continue
-                    pass
-                else:
-                    # calculate similarity between first party records and other records
-                    # metrics.testStart() 
-                    sim_val = sim(rec[1],vertice)
-                    # metrics.testFinish() # Calculate an average time and output with the For vertice line
-                    if sim_val >= min_similarity_threshold:
-                        # add edges - does not match exactly
-                        
-                        G.add_edge(vertice, thisRecordEncoding, sim = sim_val)   # This line should be used more carefully to optimise performance
-                        break
-
-
-            #G.number_of_nodes
-            #print("Vertices compared with: each record in DB[1]")
-            # iterate parties
-            """
-            for i in range(num_of_parties): 
-                # other parties 
-                if i > 0:
-            # iterate records 
-                    for rec in DBs[i]: 
-                        # iterate vertices in G (first party)
-                        for vertice in Graph_verts :
-                            #print("won't this print forever?") # Infinite loop
-                            # calculate similarity between first party records and other records
-                            sim_val = sim(rec[1],c)
-                            if sim_val >= min_similarity_threshold:
-                                # add edges - does not match exactly
-                                    rec = rec[1]
-                                    G.add_edge(c, rec, sim = sim_val)  
-            """
-    
-    G_edges_weighted = list(G.edges(data=True))
-
-    opt_E = nx.max_weight_matching(G)
-    print("weight matching")
-    # iterate edges
-    check_vals = [X for X in opt_E]
-
-    G_edges = list(G.edges)
-    for edges in list(G_edges):
-        node1 = edges[0]
-        node2 = edges[1]
-        if edges in check_vals:
-            continue
+        #common bit positions set to 1 
+        z = 0 
+        p = 2
+        
+        pos_counter = []
+        a_positions = []
+        b_positions = []
+        
+        for i in range(len(a)):
+            pos_counter.append(i)
+            if a[i] == '1': 
+                a_positions.append(pos_counter[i])
+        
+        pos_counter = []
+        for i in range(len(b)):
+            pos_counter.append(i)
+            if b[i] == '1': 
+                b_positions.append(pos_counter[i])
+        
+        common_pos = list(set(a_positions)&set(b_positions))
+        common_count = len(common_pos)
+        
+        z = common_count
+        
+        #bit positions set to 1 
+        l = 0 
+        
+        l_a = a.count('1')
+        l_b = b.count('1')
+        
+        if l_a > l_b:
+            l = l_a 
+        elif l_a < l_b: 
+            l = l_b
         else: 
-            G.remove_edge(node1, node2)
+            l = l_a 
 
-    M = nx.Graph() #G # initialise to not break later
-    #print("init M")
+        
+        if z == 0:
+            sim=0
+        else: 
+            sim = p * z / (l+z)
+        
+        return sim
+
+
+    def staticLinkage(self, DBs): 
+        # input 
+        # D --> Party 𝑃𝑖’s BFs
+        num_of_parties = len(DBs)
+        if num_of_parties != 3:
+            print("ERROR Static linkage requires 3 inputs, returning empty list")
+            return []
+
+        # sim --> Similarity function
+
+        # ord --> Ordering function for incremental processing of databases : 
+
+        # map --> one to one mapping algo
+
+        # min_similarity_threshold (st) --> Minimum similarity threshold to classify record sets
+        min_similarity_threshold = 0.75
+        # min_subset_size (sm) --> Minimum subset size, with 2 ≤ 𝑠𝑚 ≤ 𝑝
+        min_subset_size = 2
+
+        # output
+        # M - matching clusters
+        #intialisation 
+        clus_ID = 0
+        resultGraph = nx.Graph()
+        for db in DBs:
+            self.initaliseVertices(db,resultGraph)
+
+        #result = []
+
+        # order databases 
+        # choose between random_order or sorted_order 
+        # sorted_order is more efficient
+        DBs = self.random_order(DBs)
+       
+       # Needs explanation here
+        for i in range(num_of_parties-1):
+            tempGraph = nx.Graph()
+            Graph_verts = self.initaliseVertices(DBs[i], tempGraph)
+
+            print("Nodes in new graph:", len(Graph_verts))
+            # for DB in index > i 
+            for Db in DBs:
+                if DBs.index(Db) <= i:
+                    continue
+
+                print("Looking for matches in Db", DBs.index(Db), " which is of size:",len(Db))
+                counting = 0
+
+                indexerExist = False
+                if self.indexer != None:
+                    assert type(self.indexer) == Indexer
+                    self.indexer.initialIndexBuild(Db)
+                    indexerExist = True
+
+                for vertice in Graph_verts:
+                    counting += 1
+                    #print("Comparing all recs from DB ", i," with vertice ", counting, " encoding on vert: ",  vertice)
+
+                    # if vertice already in a cluster with 3 rows then continue
+
+                    self.findMatchesinDB(Db, vertice, indexerExists=indexerExist)
+
+            G_edges = list(self.G.edges)
+            print("Initial length of G_edges was", len(G_edges))
+
+            G_edges_weighted = list(self.G.edges(data=True))
+            opt_E = nx.max_weight_matching(self.G)
+            # iterate edges
+            #print("Type of opt_E",type(opt_E))
+            check_vals = list(opt_E)
+            #print("Length of check_vals:", len(check_vals))
+
+            for outer in check_vals:
+                resultGraph.add_edge(*outer)
+                
             
-    #iterate remaining edges 
-    #merge cluster vertices 
-    G_edges = list(G.edges)
-    for edges in list(G_edges):
-        node1 = edges[0]
-        node2 = edges[1]
-        #print("TYPE OF G: ",type(G))
-        assert type(G) == nx.graph.Graph
-        #print("contracting nodes")
-        M = nx.contracted_nodes(G, node1, node2)
-    #"""
-    final_clusters = M.nodes 
-    StaticClusters = []
-    print("Created cluster list of length: ", len(final_clusters))
+            
+            #resultGraph = self.G
+                    
+            #iterate remaining edges 
+            #merge cluster vertices 
+            Result_edges = list(resultGraph.edges)
+            print("Size of result edges", len(Result_edges))
+            for edges in list(Result_edges):
+                node1 = edges[0]
+                node2 = edges[1]
+                #print("TYPE OF G: ",type(resultGraph))
+                assert type(resultGraph) == nx.graph.Graph
 
-    # Iterate final clusters
-    for c in final_clusters: 
-        #print("length of cluster",len(c), " ", c)
-        # size at least sm
-        if int(c) >= min_subset_size:
-            c = createNewCluster(c)
-            #StaticClusters.addClusterStaticly(c)
-            # Add to result
-            StaticClusters.append(c)
+                # if neither node has been used to make a cluster, then:
+                potentialCluster1 = self.findIfNodeIsClusterInClusterList(node1)
+                if potentialCluster1 != None:
+                    potentialCluster1.addOneRowToCluster(node2)
+                    cluster = potentialCluster1
+                else:
+                    potentialCluster2 = self.findIfNodeIsClusterInClusterList(node2)
+                    if potentialCluster2 != None:
+                        potentialCluster2.addOneRowToCluster(node1)
+                        cluster = potentialCluster2
+                    else:
+                        cluster = self.createNewCluster(node1)
+                        cluster.addOneRowToCluster(node2)
 
-    # output M - returns list of clusters
-    #return (" Cluster list: ", result)
-    return StaticClusters
+                self.listOfClusters.append(cluster)           
 
-def createNewCluster(c):
-    #print(c)
-    clusterFormat = c
+                # Figure out how to add cluster if we only updated it.
+                
+                #resultGraph = nx.contracted_nodes(resultGraph, node1, node2)
+            print("Current size of clusterlist before next iteration:", len(self.listOfClusters))
+                
+            
+        final_clusters = resultGraph.nodes
 
-    return clusterFormat
+       
+        print("Created cluster list of length: ", len(self.listOfClusters))
+        return self.listOfClusters
+
+    def findIfNodeIsClusterInClusterList(self, node1):
+        for cluster in self.listOfClusters:
+            for row in cluster.getClusterRowObjList():
+                if node1 == row:
+                    return cluster
+        return None
+
+
+    def initaliseVertices(self, Db, G):
+        # add vertices
+        for row in Db:
+            assert type(row) == Row
+            vert = row#.encodedRowString
+            G.add_node(vert)
+        
+        return list(G.nodes)
+
+    def findMatchesinDB(self, Db, vertice, indexerExists=False):
+        foundMatch = False
+
+        if indexerExists:
+            rows = self.indexer.getRowsWithAtLeast1SameKey(vertice)
+            #print("Comparing vertice with", len(rows), "rows")
+            for row in rows:
+                assert type(row) == Row
+                foundMatch = self.findMatch(row,vertice)
+                if foundMatch == True:
+                    break                       
+                    
+        else:
+            for row in Db:  
+                assert type(row) == Row  
+                foundMatch = self.findMatch(row,vertice)
+                if foundMatch == True:
+                    break    
+
+    def findMatch(self,row,vertice):
+        assert row != None
+        assert vertice != None
+        exactMatch = row.encodedRowString.count(vertice.encodedRowString)
+        if exactMatch == 1:
+            self.G.add_edge(vertice, row, sim = 1)
+            return True
+        else:
+            sim_val = self.sim(row.encodedRowString, vertice.encodedRowString)
+            if sim_val >= self.min_similarity_threshold:
+                # add edges
+                self.G.add_edge(vertice, row, sim = sim_val)   # This line should be used more carefully to optimise performance
+                return True
+            else:
+                return False
+
+    def createNewCluster(self, row):
+        #print(row)
+        assert type(row) == Row
+        cluster = Cluster(self.clusterId)
+        cluster.addOneRowToCluster(row)
+        self.clusterId += 1
+
+        return cluster

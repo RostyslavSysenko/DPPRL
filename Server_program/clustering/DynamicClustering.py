@@ -1,12 +1,13 @@
-from sklearn.neighbors import NearestNeighbors
+from sklearn.neighbors import *
 import os, sys
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.Utilities import *
-from  data_structures.ClusterList import *
+from data_structures.ClusterList import ClusterList
+
 
 class DynamicClusterer:
-    def findBestClusterForRow(blockingTurnedOn,row,operation, indexer,clusterAggregations):
+    def findBestClusterForRow(self, blockingTurnedOn, row, operation, indexer, clusterAggregations):
         """
         - the idea of taking 2 best clusters is so we can somewhat judge uncertainty of clustering
         by checking how close the 2nd cluster comes to the first
@@ -16,6 +17,7 @@ class DynamicClusterer:
 
         if (not blockingTurnedOn):
             knn_classifier.fit(clusterAggregations) # fit the model based on the whole data
+            assert len(row.rowListRepresentation) == 200
             distance_mat, neighbours_vec = knn_classifier.kneighbors([row.rowListRepresentation])
             
             clusterIdxBest1= neighbours_vec[0][0] # gets us index of cluster that we want to modify
@@ -64,3 +66,4 @@ class DynamicClusterer:
             certainty = 0
 
         return certainty
+

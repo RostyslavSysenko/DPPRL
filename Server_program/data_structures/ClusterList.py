@@ -4,8 +4,7 @@ parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.Utilities import *
 from data_structures.Indixer import * # Indexer
-from data_structures.ClusterList import * # Indexer
-from clustering.DynamicClustering import *
+#from clustering.DynamicClustering import *
 
 class ClusterList:
     """
@@ -84,7 +83,7 @@ class ClusterList:
 
         return rowList
 
-    def addRowDynamic(self, row):
+    def addRowDynamic(self, row, DynamicClusterer):
         """ 
         input: Row object (which is found in Utilities folder i think)
 
@@ -99,10 +98,10 @@ class ClusterList:
             rowList = self.__generateRowList()
             self.__indexer.initialIndexBuild(rowList)
     
-        clusterIdx,selectionCertainty = DynamicClusterer.findBestClusterForRow(self.blockingTurnedOn(),row,Operation.INSERT, self.__indexer,self.clusterAggregations)
+        clusterIdx,selectionCertainty = DynamicClusterer.findBestClusterForRow(self.blockingTurnedOn(), row, Operation.INSERT, self.__indexer, self.clusterAggregations)
 
         # here we conduct the insertion operation
-        if (selectionCertainty>self.certaintyThreshold): # we decide to inser
+        if (selectionCertainty>self.certaintyThreshold): # we decide to insert
             self.__growExistingClusterInAClusterList(row, clusterIdx)
         else: # clustering certainty is low so we create a new cluster
             new_cluster = Cluster()
@@ -112,8 +111,30 @@ class ClusterList:
         if self.blockingTurnedOn(): #keep the indexing dictionary up to date
             self.__indexer.updateIndexingDictOnInsert(insertedRow=row)
 
+    def loadFromFile(self, stringFromFile):
+        # Loads in the string representation of clusterlist from the output file.
+        # We can do the same file.readline() method for this one too if it's going to be easier.
+        assert type(stringFromFile) == str
+        pass
+
+    def buildFromFile(self,clustersFile):
+        """
+        One file stores the string representation of a ClusterList, another stores the string of each cluster.
+
+        def saveClusters(self, ClusterList):
+            for cluster in ClusterList.clusterList:
+                print(cluster, file=open(self.saveFilenameC, "a")) 
+                This part is here to show you how it's been saved.
+
+        clustersFile.readline() should produce a cluster string representation, loop through adding these to clusterlist.
+        """
+
+        pass
+
+
 
     def __str__(self) -> str:
+        # All this needs is a change to a format delimited by a unique string (for example: ":::") so that you can string.split and string.strip back into their datatypes ie list(), AggrFunc(). 
         returnedStr = "\n" + "largestOccupiedIndex : " + str(self.nextAvailIndex-1) +  "\n" + "cluster aggr function: " + str(self.clusterAggrFunction) + "\n" +"clusterReps: " + str(self.clusterAggregations) +"\n"+"numberOfItemsInEachCluster: ["
 
         for cluster in self.clusterList:
