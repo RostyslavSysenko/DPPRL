@@ -407,7 +407,9 @@ from data_structures.Indixer import *
 # ListOfAttribute_OrderTupples.append(("zipCode",0))
 # ListOfAttribute_OrderTupples.append(("City",1))
 
-# Idxer = Indexer(bitsPerAttribute= 4,ListOfAttribute_OrderTupples=ListOfAttribute_OrderTupples)
+##  list of attribute-order tupples example [("zipCode",0),("City",1)]
+
+# Idxer = Indexer(bitsPerAttribute = 4,ListOfAttribute_OrderTupples=ListOfAttribute_OrderTupples)
 # cList_w_blocking = ClusterList(certaintyThreshold = 0.5,clusterAggrFunction = AggrFunct.MEAN,indexer = Idxer)
 
 # c0 = Cluster() # the true bit string is 00000000
