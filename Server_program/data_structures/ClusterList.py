@@ -4,6 +4,7 @@ parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.Utilities import *
 from data_structures.Indixer import * # Indexer
+import pickle
 #from clustering.DynamicClustering import *
 
 class ClusterList:
@@ -111,25 +112,21 @@ class ClusterList:
         if self.blockingTurnedOn(): #keep the indexing dictionary up to date
             self.__indexer.updateIndexingDictOnInsert(insertedRow=row)
 
-    def loadFromFile(self, stringFromFile):
-        # Loads in the string representation of clusterlist from the output file.
-        # We can do the same file.readline() method for this one too if it's going to be easier.
-        assert type(stringFromFile) == str
-        pass
-
-    def buildFromFile(self,clustersFile):
+    def pickleToClusterList(pickleStr):
         """
-        One file stores the string representation of a ClusterList, another stores the string of each cluster.
-
-        def saveClusters(self, ClusterList):
-            for cluster in ClusterList.clusterList:
-                print(cluster, file=open(self.saveFilenameC, "a")) 
-                This part is here to show you how it's been saved.
-
-        clustersFile.readline() should produce a cluster string representation, loop through adding these to clusterlist.
+        returns a cluster list that is built based on its pickle representation.
         """
+        
+        return pickle.loads(pickleStr)
 
-        pass
+
+    def clusterListToPickle(self):
+        """
+        returns a pickle byte string that is built based on its pickle representation. This is needed so that the state of the program can be
+        saved into hard disc or used for analytics
+        """
+        
+        return pickle.dumps(self)
 
 
 

@@ -17,7 +17,6 @@ class DynamicClusterer:
 
         if (not blockingTurnedOn):
             knn_classifier.fit(clusterAggregations) # fit the model based on the whole data
-            assert len(row.rowListRepresentation) == 200
             distance_mat, neighbours_vec = knn_classifier.kneighbors([row.rowListRepresentation])
             
             clusterIdxBest1= neighbours_vec[0][0] # gets us index of cluster that we want to modify
