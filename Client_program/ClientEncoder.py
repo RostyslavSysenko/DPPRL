@@ -2,13 +2,14 @@ from BloomFilter import *
 import socket
 import json
 import sys
+from ClientCommunicator import ClientCommunicator
 from argumentHandler import *
 
 class FileEncoder:
     """
     This class is called on a data provider's computer and 
     """
-    def __init__(self, bf, argHandler=argumentHandler(sys.argv)): # Only input to initialise should be the argumentHandler object
+    def __init__(self, bf, communicator, argHandler=argumentHandler(sys.argv)): # Only input to initialise should be the argumentHandler object
         argHandler.handleArguments
         if argHandler.attributeList == None:
             argHandler.defineAttributeTypes()
@@ -21,29 +22,9 @@ class FileEncoder:
         self.encodings = []   
         self.attributeNames = []
         self.jsonEncodings = []
-        self.recordDict = bf.__read_csv_file__(self.fileLocation, True, 0) 
+        self.recordDict = bf.__read_csv_file__(self.fileLocation, True, 0)      
 
-    def send(self, message):
-        encoded = message.encode()
-        self.soc.send(encoded)
-
-    def receives(self):
-        rMessage = self.soc.recv(1024)
-        return rMessage.decode()        
-
-    def connectToServer(self, host, port):
-        # Server connection
-        ipv4 = socket.AF_INET
-        tcp = socket.SOCK_STREAM
-        self.host = host
-        self.port = port        
-
-        self.soc = socket.socket(ipv4, tcp)
-        print("Client socket successfully created")
-
-        # connecting to the server
-        self.soc.connect((self.host, self.port))
-        print("the socket has successfully connected to server via port ", self.port)       
+        self.communicator = communicator
     
     def encodeByAttribute(self, bf, rec):       
         # Running inside a for record in dictionary loop
@@ -102,30 +83,15 @@ class FileEncoder:
         if json == False: # Kept old functionality for debugging purposes.
             for r in self.encodings:
                 cmd = "STATIC INSERT " + str(r)
-                self.send(cmd)
-                self.waitForAcknowledge()
+                self.communicator.send(cmd)
+                self.communicator.waitForAcknowledge()
         else:
             for r in self.jsonEncodings:
                 cmd = "STATIC INSERT " + str(r)
-                self.send(cmd)
-                self.waitForAcknowledge()
+                self.communicator.send(cmd)
+                self.communicator.waitForAcknowledge()
         
         # Each record is sent as a STATIC INSERT as static linkage does not account for UPDATE or DELETE operations.
-
-    def waitForAcknowledge(self):
-        # Wait until server acknowledges before continuing.        
-        AcknowledgedReceive = False
-        while not AcknowledgedReceive:                
-            rcvd = self.receives()
-            if rcvd.startswith("ACK"):
-                AcknowledgedReceive = True
-
-    def continuousDynamicLinkage(self):
-        # While True
-            # Read CSV
-            # Detect changes
-            # If there are changes update the linkage unit
-        pass    
 
     def nameAttributes(self, argHandler):
         # Populate self.attributeNames using input format: NOT_ENCODED, STR_ENCODED, STR_ENCODED, STR_ENCODED, INT_ENCODED
@@ -192,8 +158,8 @@ class FileEncoder:
         print("Sending DYNAMICALLY")
         for r in self.jsonEncodings:
             cmd = "DYNAMIC INSERT " + str(r)
-            self.send(cmd)
-            self.waitForAcknowledge()
+            self.communicator.send(cmd)
+            self.communicator.waitForAcknowledge()
 
     def checkRecordComplete(self, rec):
         for attributeIdx in range(0, len(self.attributeTypesList)):
@@ -215,7 +181,9 @@ def main():
     argHandler.handleArguments()
     bf = argHandler.findBloomFilterConfig()
 
-    clientEncoder = FileEncoder(bf,argHandler=argHandler)
+    comm = ClientCommunicator()
+
+    clientEncoder = FileEncoder(bf,comm,argHandler=argHandler)
     clientEncoder.nameAttributes(argHandler)
 
     # Perform encoding
@@ -237,25 +205,25 @@ def main():
     if argHandler.saveOption:
         clientEncoder.saveEncodings()
     # Attempt to connect to the server
-    clientEncoder.connectToServer(argHandler.host, argHandler.port)  
+    clientEncoder.communicator.connectToServer(argHandler.host, argHandler.port)  
 
     if not argHandler.dynamicLinkage:       
         # Send static insertions
         clientEncoder.sendEncodingsStatic()
-        clientEncoder.send("SAVE") # Tell server to save the received encodings after finished sending.
-        clientEncoder.waitForAcknowledge()
+        clientEncoder.communicator.send("SAVE") # Tell server to save the received encodings after finished sending.
+        clientEncoder.communicator.waitForAcknowledge()
 
         if argHandler.staticLink: # This is sent on third dataset for demonstration (-l)
-            clientEncoder.send("STATIC LINK")
+            clientEncoder.communicator.send("STATIC LINK")
     
     if argHandler.dynamicLinkage:
         # Send dynamic insertions
         clientEncoder.sendEncodingsDynamic()
-        clientEncoder.send("SAVE") # Tell server to save the received encodings after finished sending.
-        clientEncoder.waitForAcknowledge()
+        clientEncoder.communicator.send("SAVE") # Tell server to save the received encodings after finished sending.
+        clientEncoder.communicator.waitForAcknowledge()
 
     # Close the socket and exit the program when all encodings have been sent.
-    clientEncoder.soc.close()
+    clientEncoder.communicator.soc.close()
     
 if __name__ == "__main__":
     main()

@@ -161,8 +161,17 @@ class Server:
 
 
     def doStaticLinkage(self, json=True):
+        """
+        Perform static linkage on all previously received datasets, resets the clusterlist and performs much faster static linkage.
+        """
+        # Initialise indexer
+        bitLength = 50
+        print("Initialising Indexer")
+        listTuples = self.indexerFormatting()
+        self.indexer = Indexer(bitLength,listTuples)
+        # Reset clusterlist
         self.clusterlist = ClusterList(indexer=self.indexer)
-        # Perform blossom algorithm on 3 inputs
+        # Perform blossom algorithm on 3 inputs [CHANGE TO ALL RECORDS]
 
         # Purpose of this function is for demonstration, we will be using first 3 
         # databases as a staticly linked starting point then add 2 more dynamically
@@ -187,13 +196,7 @@ class Server:
         elif dbCount < 3:
             print("There are only ", dbCount, " databases, 3 are required.")
 
-        # Initialise indexer
-        bitLength = 50
-
-        print("Initialising Indexer")
-        listTuples = self.indexerFormatting()
-        self.indexer = Indexer(bitLength,listTuples) # Using 50 bit length hardcoded
-        self.clusterlist.__indexer = self.indexer
+        
 
         print("Static Linkage Module calling...")
         # Initialise staticLinker
@@ -212,7 +215,7 @@ class Server:
     def indexerFormatting(self):
         """
         This function returns the input required for Indexer module. 
-        Hardcoded to use the first encoded integer attribute which is zipcode.
+        Hardcoded to use the city and zipcode but configuration will be added for final product delivery.
         """     
         returnVal = list()
         city = tuple(("StringAttribute_3",2))
@@ -239,7 +242,7 @@ class Server:
         self.metric.updateClusters(self.clusterlist)
         self.metric.displayLatest()
         self.result.saveClusterList(self.clusterlist)
-        self.result.saveClusters(self.clusterlist)
+        #self.result.saveClusters(self.clusterlist)
 
 def main():
     # USAGE:
