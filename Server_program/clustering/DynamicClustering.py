@@ -7,6 +7,7 @@ from data_structures.ClusterList import ClusterList
 
 
 class DynamicClusterer:
+
     def findBestClusterForRow(blockingTurnedOn, row, operation, indexer, clusterAggregations):
         """
         - the idea of taking 2 best clusters is so we can somewhat judge uncertainty of clustering
@@ -24,15 +25,24 @@ class DynamicClusterer:
 
         else: # else if indexing is enabled
             #check to make sure that indexing is done
-            assert not indexer.indexingHasNotBeenDoneYet(), "indexing not done"
-            indexedClusterList = indexer.getClustersWithAtLeast1RowWithSameKey(row)
-            formattedClusterAggregations = ClusterList.listOfClustersTo2DArrayOfClustAggr(indexedClusterList)
+
+            try:
+                assert not indexer.indexingHasNotBeenDoneYet(), "indexing not done"
+                indexedClusterList = indexer.getClustersWithAtLeast1RowWithSameKey(row)
+                formattedClusterAggregations = ClusterList.listOfClustersTo2DArrayOfClustAggr(indexedClusterList)
+                
+                knn_classifier.fit(formattedClusterAggregations) #fit the model based on subset of data
+                distance_mat, neighbours_vec = knn_classifier.kneighbors([row.rowListRepresentation])
             
-            knn_classifier.fit(formattedClusterAggregations) #fit the model based on subset of data
-            distance_mat, neighbours_vec = knn_classifier.kneighbors([row.rowListRepresentation])
-        
-            clusterIdxBest1 = neighbours_vec[0][0] # gets us index of cluster that we want to modify
-            clusterIdxInClusterListBest1 =  indexedClusterList[clusterIdxBest1].getId()
+                clusterIdxBest1 = neighbours_vec[0][0] # gets us index of cluster that we want to modify
+                clusterIdxInClusterListBest1 =  indexedClusterList[clusterIdxBest1].getId()
+            except(AttributeError): # this means indexing didnt return anything for us to work with
+                # if this is the case, then we dont use indexing for this particular case
+                knn_classifier.fit(clusterAggregations) # fit the model based on the whole data
+                distance_mat, neighbours_vec = knn_classifier.kneighbors([row.rowListRepresentation])
+                
+                clusterIdxBest1= neighbours_vec[0][0] # gets us index of cluster that we want to modify
+                clusterIdxInClusterListBest1 = clusterIdxBest1
 
 
 
