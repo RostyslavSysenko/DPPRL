@@ -112,24 +112,7 @@ class ClusterList:
 
         if self.blockingTurnedOn(): #keep the indexing dictionary up to date
             self.__indexer.updateIndexingDictOnInsert(insertedRow=row)
-
-    def pickleToClusterList(pickleStr):
-        """
-        returns a cluster list that is built based on its pickle representation.
-        """
-        
-        return pickle.loads(pickleStr)
-
-
-    def clusterListToPickle(self):
-        """
-        returns a pickle byte string that is built based on its pickle representation. This is needed so that the state of the program can be
-        saved into hard disc or used for analytics
-        """
-        
-        return pickle.dumps(self)
-
-
+            
 
     def __str__(self) -> str:
         # All this needs is a change to a format delimited by a unique string (for example: ":::") so that you can string.split and string.strip back into their datatypes ie list(), AggrFunc(). 

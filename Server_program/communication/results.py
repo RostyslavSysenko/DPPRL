@@ -2,6 +2,7 @@ import sys, os
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.ClusterList import ClusterList
+import pickle
 
 class results:
     """
@@ -9,27 +10,22 @@ class results:
     Future work might include allowing for different filenames using an input parameter.
     """
     def __init__(self):
-        self.saveFilenameC = "./outputs/ClusterOutputs.txt"
-        self.saveFilenameClist = "./outputs/ClusterListOut.txt"
+        self.saveFilenameC = "./outputs/ClusterOutputs.pkl"
+        self.saveFilenameClist = "./outputs/ClusterListOut.pkl"
 
     def saveClusterList(self, ClusterList):
+        """
+        saves a pickle byte string that is built based on its pickle representation. This is needed so that the state of the program can be
+        saved into hard disc or used for analytics
+        """
         file = open(self.saveFilenameClist, 'wb')
-        file.write(ClusterList.clusterListToPickle())
-        
-        print(ClusterList, file=open(self.saveFilenameClist, "a"))
-
-
-    def saveClusters(self, ClusterList):
-        for cluster in ClusterList.clusterList:
-            print(cluster, file=open(self.saveFilenameC, "a"))
-
+        pickle.dump(ClusterList, file)
 
     def loadClusterList(self, linkageUnit):
+        """
+        returns a cluster list that is built based on its pickle representation.
+        """
         fileCList = open(self.saveFilenameClist, "rb")
-        pickledClusterlist = fileCList.readline()
+        linkageUnit.clusterlist = pickle.load(fileCList)
+        print("Loaded server using imported clusterlist of length:",len(linkageUnit.clusterlist.clusterList))
 
-        # Send to ClusterList module
-        linkageUnit.clusterlist = ClusterList.pickleToClusterList(pickledClusterlist)
-        #linkageUnit.clusterlist.buildFromFile(fileClus)
-
-    

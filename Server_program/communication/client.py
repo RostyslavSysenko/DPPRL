@@ -81,7 +81,7 @@ class client:
                 self.staticNotDone = False
                 #print("CLUSTER AGGREGATIONS:",self.connectedServer.clusterlist.clusterAggregations)
                 self.connectedServer.metric.startDynamicInsert()
-                self.connectedServer.clusterlist.addRowDynamic(newRow, DynamicClusterer())
+                self.connectedServer.clusterlist.addRowDynamic(newRow, DynamicClusterer)
                 self.connectedServer.metric.finishDynamicInsert()
             elif self.staticNotDone:
                 pass
@@ -122,7 +122,12 @@ class client:
             print("Metrics requested")
             self.connectedServer.displayMetrics()
 
-        # if rcvd.startswith("")
+        if rcvd.startswith("SAVECLUSTERS"):
+            print("Saving clusters")
+            self.connectedServer.result.saveClusterList(self.connectedServer.clusterlist)
+
+        
+        # if rcvd.startswith("SAVECLUSTERS")
         # More commands to be entered here
         
         if rcvd == 'QUIT':

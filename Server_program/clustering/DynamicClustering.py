@@ -15,9 +15,9 @@ class DynamicClusterer:
         """
         
         knn_classifier = NearestNeighbors(n_neighbors=2, metric="cosine")
-
+        
         if (not blockingTurnedOn):
-            knn_classifier.fit(clusterAggregations) # fit the model based on the whole data
+            knn_classifier.fit(clusterAggregations) # fit the model based on the whole data            
             distance_mat, neighbours_vec = knn_classifier.kneighbors([row.rowListRepresentation])
             
             clusterIdxBest1= neighbours_vec[0][0] # gets us index of cluster that we want to modify
@@ -32,11 +32,12 @@ class DynamicClusterer:
                 formattedClusterAggregations = ClusterList.listOfClustersTo2DArrayOfClustAggr(indexedClusterList)
                 
                 knn_classifier.fit(formattedClusterAggregations) #fit the model based on subset of data
+
                 distance_mat, neighbours_vec = knn_classifier.kneighbors([row.rowListRepresentation])
             
                 clusterIdxBest1 = neighbours_vec[0][0] # gets us index of cluster that we want to modify
                 clusterIdxInClusterListBest1 =  indexedClusterList[clusterIdxBest1].getId()
-            except(AttributeError): # this means indexing didnt return anything for us to work with
+            except(AttributeError, ValueError): # this handles when indexer returns 0 or 1 row.
                 # if this is the case, then we dont use indexing for this particular case
                 knn_classifier.fit(clusterAggregations) # fit the model based on the whole data
                 distance_mat, neighbours_vec = knn_classifier.kneighbors([row.rowListRepresentation])

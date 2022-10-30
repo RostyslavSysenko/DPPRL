@@ -236,13 +236,10 @@ class Server:
             assert clients.rowList != None
             rowListInput.append(clients.rowList)
 
-        self.metric.findGroundTruth(rowListInput)
+        self.metric.updateGroundTruthClusters(rowListInput)
 
     def displayMetrics(self):
-        self.metric.updateClusters(self.clusterlist)
         self.metric.displayLatest()
-        self.result.saveClusterList(self.clusterlist)
-        #self.result.saveClusters(self.clusterlist)
 
 def main():
     # USAGE:
