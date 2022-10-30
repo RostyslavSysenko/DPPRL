@@ -1,8 +1,8 @@
 import os, sys
-from Server_program.data_structures.Utilities import Cluster
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 from data_structures.ClusterList import ClusterList
+from data_structures.Utilities import Cluster
 
 
 class metrics:
@@ -46,15 +46,15 @@ class metrics:
     def updateClusters(self,clustList):
         self.clusterList = clustList
 
-    def findAverageClusterPurity(self,averageClusterPurity):
-        # 
-
-       # contingency_matrix = metrics.cluster.contingency_matrix(averageClusterPurity, ClusterList)
-# return purity
-       # return sum(amax (contingency_matrix, axis=0)) / sum(contingency_matrix)
-
+    def findAverageClusterPurity(self):
+        # for 
 
         pass
+
+    def getPurityScore():
+        pass
+        #contingency_matrix = metrics.cluster.contingency_matrix(averageClusterPurity, ClusterList)
+        #return sum(amax (contingency_matrix, axis=0)) / sum(contingency_matrix)
 
     def findPerfectClusterPercentage(self):
         # 
@@ -82,7 +82,8 @@ class metrics:
                         cluster.addOneRowToCluster(row)
             clusters.append(cluster)
 
-        print("Found",len(clusters),"matches using rec_id for ground truth")
+        matches = self.clustersWithMatches(clusters)
+        print("Found",len(matches),"matches using rec_id for ground truth")
 
     def averageDynamicRuntime(self):
         total = 0
@@ -111,12 +112,12 @@ class metrics:
             print("Average dynamic insertion time:", averageDynamicTime)
  
 
-    def findClustersWithMatches(self):
+    def findClustersWithMatches(self, clusList):
         # Count number of clusters with between 2 and 5 rows in them
-        assert type(self.clusterList) == ClusterList
+        assert type(clusList) == ClusterList
 
         clusterWithMatches = 0
-        for cluster in self.clusterList.clusterList:
+        for cluster in clusList:
             rowCount = cluster.getNumberOfStoredRows()
             if (rowCount >= 2) | (rowCount <= 5):
                 clusterWithMatches += 1

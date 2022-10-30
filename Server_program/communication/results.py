@@ -13,6 +13,8 @@ class results:
         self.saveFilenameClist = "./outputs/ClusterListOut.txt"
 
     def saveClusterList(self, ClusterList):
+        file = open(self.saveFilenameClist, 'wb')
+        file.write(ClusterList.clusterListToPickle())
         
         print(ClusterList, file=open(self.saveFilenameClist, "a"))
 
@@ -23,14 +25,11 @@ class results:
 
 
     def loadClusterList(self, linkageUnit):
-        fileCList = open(self.saveFilenameClist)
-        fileClus = open(self.saveFilenameC)
-        # Convert to string
-        CListString = fileCList.readlines()
-        assert type(CListString) == str
+        fileCList = open(self.saveFilenameClist, "rb")
+        pickledClusterlist = fileCList.readline()
 
         # Send to ClusterList module
-        linkageUnit.clusterlist.loadFromFile(CListString)
-        linkageUnit.clusterlist.buildFromFile(fileClus)
+        linkageUnit.clusterlist = ClusterList.pickleToClusterList(pickledClusterlist)
+        #linkageUnit.clusterlist.buildFromFile(fileClus)
 
     
