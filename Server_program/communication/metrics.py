@@ -82,7 +82,7 @@ class metrics:
                         cluster.addOneRowToCluster(row)
             clusters.append(cluster)
 
-        matches = self.clustersWithMatches(clusters)
+        matches = self.findClustersWithMatches(clusters)
         print("Found",len(matches),"matches using rec_id for ground truth")
 
     def averageDynamicRuntime(self):
@@ -114,7 +114,7 @@ class metrics:
 
     def findClustersWithMatches(self, clusList):
         # Count number of clusters with between 2 and 5 rows in them
-        assert type(clusList) == ClusterList
+        #assert type(clusList) == ClusterList
 
         clusterWithMatches = 0
         for cluster in clusList:
@@ -123,7 +123,7 @@ class metrics:
                 clusterWithMatches += 1
 
         self.clustersWithMatches = clusterWithMatches
-        print(clusterWithMatches)
+        #print(clusterWithMatches)
         return clusterWithMatches
 
     def beginLinkage(self):

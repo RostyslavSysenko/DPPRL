@@ -5,7 +5,6 @@ sys.path.append(parentdir)
 from data_structures.Utilities import *
 from data_structures.Indixer import * # Indexer
 import pickle
-#from clustering.DynamicClustering import *
 
 class ClusterList:
     """
@@ -42,6 +41,8 @@ class ClusterList:
         return self.__indexer is not None
 
     def listOfClustersTo2DArrayOfClustAggr(clusterList):
+        assert type(clusterList) == list
+
         clusterListRepr2D = list()
 
         for cluster in clusterList:
@@ -84,7 +85,7 @@ class ClusterList:
 
         return rowList
 
-    def addRowDynamic(self, row, DynamicClusterer):
+    def addRowDynamic(self, row,DynamicClusterer):
         """ 
         input: Row object (which is found in Utilities folder i think)
 

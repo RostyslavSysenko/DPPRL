@@ -407,8 +407,9 @@ from clustering.DynamicClustering import DynamicClusterer
 # ListOfAttribute_OrderTupples = list()
 # ListOfAttribute_OrderTupples.append(("zipCode",0))
 # ListOfAttribute_OrderTupples.append(("City",1))
+# dynclus = DynamicClusterer
 
-##  list of attribute-order tupples example [("zipCode",0),("City",1)]
+# #  list of attribute-order tupples example [("zipCode",0),("City",1)]
 
 # Idxer = Indexer(bitsPerAttribute = 4,ListOfAttribute_OrderTupples=ListOfAttribute_OrderTupples)
 # cList_w_blocking = ClusterList(certaintyThreshold = 0.5,clusterAggrFunction = AggrFunct.MEAN,indexer = Idxer)
@@ -433,18 +434,18 @@ from clustering.DynamicClustering import DynamicClusterer
 
 # # # we expect that insertion will be made into the cluster0 since it is most similar and it has common 
 # # # indexing key with our added row. This test should work with any aggregation metric
-# cList_w_blocking.addRowDynamic(Row("10000000"))
+# cList_w_blocking.addRowDynamic(Row("10000000"),dynclus)
 # assert c0.getNumberOfStoredRows()==2 and c1.getNumberOfStoredRows()==2 and c2.getNumberOfStoredRows()==3, "Err1. cluster state is as follows: " + str(cList_w_blocking)
 
 # #TEST SET 8.2: (automated)
-# cList_w_blocking.addRowDynamic(Row("11111111"))
+# cList_w_blocking.addRowDynamic(Row("11111111"),dynclus)
 # # cossim(1,1,1,1,1,1,1,1 and 1,1,1,1,1,1,1,1)=1 -> winner
 # # cossim(1,1,1,1,1,1,1,1 and 1.0, 0.67, 0.67, 0.67, 0.0, 0.0, 0.0, 0.0)= 3.01/sqrt(8*2.35)=0.69
 # # the other cluster is not a winner
 # assert c0.getNumberOfStoredRows()==2 and c1.getNumberOfStoredRows()==3 and c2.getNumberOfStoredRows()==3, "Err2. cluster state is as follows: " + str(cList_w_blocking)
 
 # #TEST SET 8.3: (automated)
-# cList_w_blocking.addRowDynamic(Row("11110000"))
+# cList_w_blocking.addRowDynamic(Row("11110000"),dynclus)
 # # cossim(1,1,1,1,0,0,0,0 and 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0) = 0/sqrt(2)=0
 # # cossim(1,1,1,1,0,0,0,0 and .0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0) = 3/sqrt(4*7)=0.57
 # # cossim(1,1,1,1,0,0,0,0 and 1.0, 0.67, 0.67, 0.67, 0.0, 0.0, 0.0, 0.0) = 2.8/sqrt(4*2.35)=0.913
