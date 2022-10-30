@@ -13,9 +13,9 @@ class metrics:
         self.linkageUnit = server # Use for access to all realtime data on the linkage unit
         # Metrics being looked for
         self.frequencyAttackCorrectGuesses = 0
-        self.averageClusterPurity = 0.0 # Aim: 1
-        self.perfectClustersPercent = 0 #in range(0, 100) # Aim: 100
-        self.clustersWithMatches = 0 # Aim: 2500.
+        self.averageClusterPurity = 0.0
+        self.perfectClustersPercent = 0
+        self.clustersWithMatches = 0
 
         # Unsure what is BigO space & Time (Space/Time complexity?)
         self.linkageRuntimes = [] # List of all/any calculated linkage runtimes
