@@ -111,13 +111,6 @@ class client:
             self.saveToJson() # Move this function call if needed to reduce amount of writes to disk (optimise)
             self.send("ACK") 
 
-        if rcvd.startswith("TRUTH"):
-            # Command should be better named
-            # Find ground truth using rec_ids
-            print("Ground truth requested.")
-            self.connectedServer.findGroundTruth()
-            self.send("ACK")
-
         if rcvd.startswith("METRICS"):
             print("Metrics requested")
             self.connectedServer.displayMetrics()

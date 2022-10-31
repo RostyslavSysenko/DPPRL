@@ -28,6 +28,7 @@ class metrics:
 
     def update(self):
         scoreslist = self.computeAllClusterPurities()
+        print(scoreslist)
         self.averageClusterPurity = self.getAveragePurity(scoreslist)
         self.perfectClustersPercent = self.getPerfectPurityPercentage(scoreslist)
         self.clustersWithMatches = self.findNumberOfClustersWithAtLeastNRows(2)
@@ -58,7 +59,10 @@ class metrics:
             startIdx = int(i*divisionSize)
             endIdx = int((i+1)*divisionSize)
             dision_i_sublist  = dynamicRuntimes[startIdx:endIdx]
-            avr_division_i = sum(dision_i_sublist)/len(dision_i_sublist)
+            if len(dision_i_sublist) != 0:
+                avr_division_i = sum(dision_i_sublist)/len(dision_i_sublist)
+            else:
+                avr_division_i = 0 # If dynamic insertions have not been completed or recorded
             listOfDivisionAverages.append(avr_division_i)
         
         plt.plot(counts, listOfDivisionAverages)
@@ -87,7 +91,7 @@ class metrics:
         frequencyBySegment = [0 for i in range(0,10)]
 
         for score in purityScoreList:
-            scoreSegment = (int)*score/10
+            scoreSegment = int(score/10)
 
             if(scoreSegment==10):
                 scoreSegment=9
@@ -117,30 +121,25 @@ class metrics:
         If corresponding clusters are the same, increment for each. Divide by total rows.
         
         """
-        totalRows = linkedCluster.getNumberOfStoredRows()
         # Will be calling cluster methods on input
         assert type(linkedCluster) == Cluster
+        totalRows = linkedCluster.getNumberOfStoredRows()
         
         # Find ground truth if not done already.
-        if (self.groundTrueClusters == None) | (len(self.groundTrueClusters) <= 1):
-            self.linkageUnit.findGroundTruth()
+        if self.groundTrueClusters == None:
+            self.updateGroundTruthClusters()
+        elif len(self.groundTrueClusters) <= 1:
+            self.updateGroundTruthClusters()
 
         # Find corresponding clusters in ground truth, if they contain a common row to our input then add them to the list
         correspondingClusters = []
         for linkedRow in linkedCluster.getClusterRowObjList(): # Loop through cluster rows
-            foundRowInGroundTruth = False
             for groundTrueCluster in self.groundTrueClusters: # Ground truth clusters
                 if linkedCluster.getClusterRowObjList() == groundTrueCluster.getClusterRowObjList():
-                    return 1 # If there is a ground true cluster with exact same rows then return 1
-
-                if foundRowInGroundTruth:
-                    break
+                    return 1 # If there is a ground true cluster with exact same rows in same order then return 1
+            foundCluster = self.findRowInGroundTruth(linkedRow)
+            correspondingClusters.append(foundCluster)
                 
-                for trueRow in groundTrueCluster.getClusterRowObjList(): # If a row is common
-                    if linkedRow.rowId == trueRow.rowId:
-                        correspondingClusters.append(groundTrueCluster)
-                        foundRowInGroundTruth = True
-                        break
         
         #print(correspondingClusters)
         # list of clusters, each has at least one row same as input cluster
@@ -150,39 +149,58 @@ class metrics:
         for cluster in correspondingClusters:
             frequency = 0
             # Loop through every other cluster 
-            for otherCluster in correspondingClusters:
+            for otherCluster in correspondingClusters: # count frequency of cluster in otherClusters
                 if correspondingClusters.index(cluster) == correspondingClusters.index(otherCluster):
-                    continue # to avoid 
-                elif cluster == otherCluster:
+                    continue # to avoid comparing cluster with itself.
+                elif metrics.clusterRowsMatchFraction(cluster, otherCluster) > 0.9:
                     frequency += 1
             if frequency > highestfrequency:
                 highestfrequency = frequency
                 highestFreqCluster = cluster        
         
-        return highestfrequency / totalRows
+        return (highestfrequency / totalRows) * 100 # percentage 
+
+    def clusterRowsMatchFraction(cluster, secondCluster):
+        assert type(cluster) == Cluster
+        numberofRows = cluster.getNumberOfStoredRows()     
+        match = 0  
+        for row in cluster.getClusterRowObjList():
+            for srow in secondCluster.getClusterRowObjList():
+                #print(row.rowId,srow.rowId)
+                if row.rowId == srow.rowId:
+                    match += 1
+
+        matchScore = match / numberofRows
+        print(matchScore)
+        return matchScore
+
+    def findRowInGroundTruth(self,row):
+        foundCluster = None
+        for groundTrueCluster in self.groundTrueClusters: # All ground truth clusters
+            for trueRow in groundTrueCluster.getClusterRowObjList(): # Compare every row in ground truth to input
+                if row.rowId == trueRow.rowId: # Find the row based on rec_id
+                    foundCluster = groundTrueCluster
+                    return foundCluster
+        if foundCluster == None:
+            print("Metrics error! Row not found in ground truth cluster list")
+        return foundCluster
     
 
     def updateGroundTruthClusters(self):
         # Create list of rowLists using ClusterList
         ourClusterList = self.linkageUnit.clusterlist.clusterList
+        Dbs = self.clusterListToRowLists(ourClusterList)
+        clusters = []
         
-
-
         # Computing the ground truth clusterlist using rec_id's.
         # Find unique rec_ids
-        uniqueRowIds = []
-        clusters = []
-        for rowList in rowLists:
-            for row in rowList:
-                rec_id = row.rowId
-                if rec_id not in uniqueRowIds:
-                    uniqueRowIds.append(row.rowId)                  
+        uniqueRowIds = self.findUniqueRecIds(Dbs)              
 
         print("Number of unique rec_ids:",len(uniqueRowIds))
         # Create clusters for each unique rec_id and populate those clusters.
         for id in uniqueRowIds:
             cluster = Cluster(id)
-            for rowList in rowLists:
+            for rowList in Dbs:
                 for row in rowList:
                     if row.rowId == id:
                         cluster.addOneRowToCluster(row)
@@ -191,6 +209,17 @@ class metrics:
         #matches = self.findClustersWithMatches(clusters)
         print("Generated",len(clusters),"ground truth clusters.")
         self.groundTrueClusters = clusters
+
+    def findUniqueRecIds(self,Dbs):
+        # Takes in list of list of rows
+        uniqueRowIds = []
+        for rowList in Dbs:
+            for row in rowList:
+                rec_id = row.rowId
+                if rec_id not in uniqueRowIds:
+                    uniqueRowIds.append(row.rowId)    
+
+        return uniqueRowIds
 
     def averageDynamicRuntime(self):
         total = 0
@@ -245,4 +274,46 @@ class metrics:
         print("LINKAGE RUNTIME: ", linkageTime)
         return linkageTime
 
+    def findUniqueDbIds(self,AllRows):
+        # Takes in list of list of rows
+        uniqueRowIds = []    
+        for row in AllRows:
+            DbId = row.DbId
+            if DbId not in uniqueRowIds:
+                uniqueRowIds.append(row.DbId)    
+
+        return uniqueRowIds
+
+    def clusterListToRowLists(self, clusterList):        
+        # Takes in actual list of clusters    
+        AllRows = []
+        # First populate AllRows with all rows in all clusters
+        for cluster in clusterList:
+            assert type(cluster) == Cluster
+            for row in cluster.getClusterRowObjList():
+                AllRows.append(row)
+
+        uniqueDbIds = self.findUniqueDbIds(AllRows)
+        #print(uniqueDbIds)
+
+        # Find highest id and populate RowLists with empty lists up to highestId - 1
+        RowLists = []
+        highestId = 0
+        for id in uniqueDbIds:
+            if id > highestId:
+                highestId = id
+
+        for i in range(0,highestId):
+            Db = []
+            RowLists.append(Db)
+            # Result is empty lists from 0 to highestId - 1
+
+        #print(RowLists)
+
+        # Then split AllRows based on row.DbId into lists at index DbId -1 inside of RowLists.
+        for row in AllRows:
+            DbIndex = row.DbId-1
+            RowLists[DbIndex].append(row)
         
+        return RowLists
+

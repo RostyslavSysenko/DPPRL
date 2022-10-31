@@ -200,7 +200,7 @@ class Server:
 
         print("Static Linkage Module calling...")
         # Initialise staticLinker
-        staticLink = staticLinker(indexer=self.indexer, metricsIn=self.metric)
+        staticLink = staticLinker(indexer=self.indexer)
 
         self.metric.beginLinkage
         output = staticLink.staticLinkage(dbs)
@@ -230,13 +230,15 @@ class Server:
 
         pass
 
-    def findGroundTruth(self):
+    def generateListofRowLists(self):
+        # Will only contain rowLists from clients connected since launch
+        # Might become redundant
         rowListInput = []
         for clients in self.connectedClients:
             assert clients.rowList != None
             rowListInput.append(clients.rowList)
 
-        self.metric.updateGroundTruthClusters(rowListInput)
+        return rowListInput
 
     def displayMetrics(self):
         self.metric.displayLatest()

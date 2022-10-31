@@ -11,13 +11,12 @@ import json
 
 
 class staticLinker:
-    def __init__(self, simThreshold=0.75, indexer=None, metricsIn=None):
+    def __init__(self, simThreshold=0.75, indexer=None):
         self.min_similarity_threshold = simThreshold
         self.G = nx.Graph()
         self.listOfClusters = []
         self.clusterId = 0
         self.indexer = indexer
-        self.metric = metricsIn
 
     def random_order(self, BF_list): 
         
@@ -172,12 +171,15 @@ class staticLinker:
                 assert type(resultGraph) == nx.graph.Graph
 
                 # if neither node has been used to make a cluster, then:
-                potentialCluster1 = self.findIfNodeIsClusterInClusterList(node1)
+                if self.bothNodesAreInClusterList(node1, node2):
+                    continue
+
+                potentialCluster1 = self.findIfNodeInClusterList(node1)
                 if potentialCluster1 != None:
                     potentialCluster1.addOneRowToCluster(node2)
                     cluster = potentialCluster1
                 else:
-                    potentialCluster2 = self.findIfNodeIsClusterInClusterList(node2)
+                    potentialCluster2 = self.findIfNodeInClusterList(node2)
                     if potentialCluster2 != None:
                         potentialCluster2.addOneRowToCluster(node1)
                         cluster = potentialCluster2
@@ -199,7 +201,24 @@ class staticLinker:
         print("Created cluster list of length: ", len(self.listOfClusters))
         return self.listOfClusters
 
-    def findIfNodeIsClusterInClusterList(self, node1):
+    def bothNodesAreInClusterList(self,node1,node2):
+        bothInClusterList = False
+        node1Found = False
+        node2Found = False
+        for cluster in self.listOfClusters:
+            for row in cluster.getClusterRowObjList():
+                if node1 == row:
+                    node1Found = True
+                if node2 == row:
+                    node2Found = True
+
+        if node1Found & node2Found:
+            bothInClusterList = True
+                    
+        return bothInClusterList
+
+
+    def findIfNodeInClusterList(self, node1):
         for cluster in self.listOfClusters:
             for row in cluster.getClusterRowObjList():
                 if node1 == row:
