@@ -1,1 +1,2 @@
-python saveCluster.py
+python saveClusters.py
+PAUSE

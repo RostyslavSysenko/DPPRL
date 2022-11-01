@@ -10,7 +10,7 @@ class results:
     Future work might include allowing for different filenames using an input parameter.
     """
     def __init__(self):
-        self.saveFilenameC = "./outputs/ClusterOutputs.pkl"
+        self.saveFilenameC = "./outputs/ClusterOutputs.txt"
         self.saveFilenameClist = "./outputs/ClusterListOut.pkl"
 
     def saveClusterList(self, ClusterList):
@@ -20,6 +20,13 @@ class results:
         """
         file = open(self.saveFilenameClist, 'wb')
         pickle.dump(ClusterList, file)
+
+    def saveClusters(self, ClusterList):
+        """
+        Output all clusters to this ClusterOutputs.txt file for debugging.
+        """
+        for cluster in ClusterList.clusterList:
+            print(cluster, file=open(self.saveFilenameC, "a"))
 
     def loadClusterList(self, linkageUnit):
         """

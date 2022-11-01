@@ -1,18 +1,19 @@
-from BloomFilter import *
-import socket
 import json
-import sys
+import sys, os
+parentdir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(parentdir)
 from ClientCommunicator import ClientCommunicator
 from argumentHandler import *
+from BloomFilter import *
 
 class FileEncoder:
     """
-    This class is called on a data provider's computer and 
+    This class is called on a data provider's computer and requires arguments: BloomFilter object and ClientCommunicator object.
+    When calling this script on the command line, you must pass a fileLocation parameter of the dataset to be encoded.
     """
-    def __init__(self, bf, communicator, argHandler=argumentHandler(sys.argv)): # Only input to initialise should be the argumentHandler object
-        argHandler.handleArguments
-        if argHandler.attributeList == None:
-            argHandler.defineAttributeTypes()
+    def __init__(self, bf, communicator, argHandler=argumentHandler(sys.argv)): # Only input to initialise should be the argumentHandler object        
+        #if argHandler.attributeList == None:
+        #    argHandler.defineAttributeTypes()
         self.attributeTypesList = argHandler.attributeList
         self.fileLocation = argHandler.fileLocation          
     
@@ -42,6 +43,8 @@ class FileEncoder:
                 numerical = int(currentAttribute)
                 intValueSet1, intValueSet2 = bf.convert_num_val_to_set(numerical, 0)  # 0 is a magic number
                 encodedAttribute = bf.set_to_bloom_filter(intValueSet1) 
+            elif attributeType.name == "INT_ENCODED":                
+                encodedAttribute = bf.set_to_bloom_filter(currentAttribute)
             elif attributeType.name == "STR_ENCODED":
                 encodedAttribute = bf.set_to_bloom_filter(currentAttribute)
             elif attributeType.name == "NOT_ENCODED":
@@ -174,28 +177,34 @@ class FileEncoder:
         # If runs without returning False,
         return True
 
+    def encodeAllRecords(self,bf):
+    # Perform encoding
+        for record in self.recordDict:
+            # Only encode records that are complete
+            recordContainsAllFields = self.checkRecordComplete(record)
+
+            if (record != None) & recordContainsAllFields:
+                encodedAttributes = self.encodeByAttribute(bf,record)
+                #print(encodedAttributes)
+                jsonEncodedRecord = self.toJson(encodedAttributes)
+                #print(jsonEncodedRecord)
+
 def main():
     # USAGE:
     # ClientEncoder.py -options FileToBeEncoded host:port    
     argHandler = argumentHandler(sys.argv)
     argHandler.handleArguments()
-    bf = argHandler.findBloomFilterConfig()
+    if argHandler.bfLen:
+        bf = argumentHandler.bloomFilterOfLength(argHandler.bfLen)
+    else:
+        bf = argHandler.findBloomFilterConfig()
 
     comm = ClientCommunicator()
 
     clientEncoder = FileEncoder(bf,comm,argHandler=argHandler)
+    clientEncoder.attributeTypesList = argHandler.defineAttributeTypes()
     clientEncoder.nameAttributes(argHandler)
-
-    # Perform encoding
-    for record in clientEncoder.recordDict:
-        # Only encode records that are complete
-        recordContainsAllFields = clientEncoder.checkRecordComplete(record)
-
-        if (record != None) & recordContainsAllFields:
-            encodedAttributes = clientEncoder.encodeByAttribute(bf,record)
-            #print(encodedAttributes)
-            jsonEncodedRecord = clientEncoder.toJson(encodedAttributes)
-            #print(jsonEncodedRecord)
+    clientEncoder.encodeAllRecords(bf)  
 
 
     # Diplay the first 5 encodings

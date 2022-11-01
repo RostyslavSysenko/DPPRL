@@ -1,7 +1,7 @@
 #from ClientEncoder import FileEncoder
 #from ClientEncoder import argumentHandler
 from ClientCommunicator import ClientCommunicator
-# Simple program to maunually close the server application if it is stuck running in the IDE.
+# 
 
 def main():
     encoder = ClientCommunicator()

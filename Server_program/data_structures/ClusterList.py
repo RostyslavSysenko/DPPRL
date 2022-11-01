@@ -103,7 +103,10 @@ class ClusterList:
         clusterIdx,selectionCertainty = DynamicClusterer.findBestClusterForRow(self.blockingTurnedOn(), row, Operation.INSERT, self.__indexer, self.clusterAggregations)
 
         # here we conduct the insertion operation
-        if (selectionCertainty>self.certaintyThreshold): # we decide to insert
+
+        targetCluster = self.clusterList[clusterIdx] # target cluster is cluster where we want to make insertion into
+
+        if (selectionCertainty>self.certaintyThreshold and targetCluster.clusterDoesntContainRowFromSameDatabase(row)): # we decide to insert
             self.__growExistingClusterInAClusterList(row, clusterIdx)
         else: # clustering certainty is low so we create a new cluster
             new_cluster = Cluster()
@@ -112,7 +115,7 @@ class ClusterList:
 
         if self.blockingTurnedOn(): #keep the indexing dictionary up to date
             self.__indexer.updateIndexingDictOnInsert(insertedRow=row)
-            
+    
 
     def __str__(self) -> str:
         # All this needs is a change to a format delimited by a unique string (for example: ":::") so that you can string.split and string.strip back into their datatypes ie list(), AggrFunc(). 
