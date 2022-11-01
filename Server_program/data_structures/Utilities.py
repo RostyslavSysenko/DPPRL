@@ -99,6 +99,13 @@ class Cluster:
     def __getAttributeNum(self):
         return len(self.__clusterRowObjLst[0].rowListRepresentation)
 
+    def clusterDoesntContainRowFromSameDatabase(self,rowObj):
+        # checks whether cluster contains the row already from the same dataset as rowObj
+
+        existingDbIds = [row.DbId for row in self.__clusterRowObjLst]
+
+        return rowObj.DbId not in existingDbIds
+
     def __setClusterAggrToMeanVector(self):
         #assume cluster has at least 1 row
         assert len(self.__clusterRowObjLst)>0

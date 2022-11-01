@@ -11,12 +11,13 @@ import json
 
 
 class staticLinker:
-    def __init__(self, simThreshold=0.75, indexer=None):
+    def __init__(self, simThreshold=0.75, indexer=None, sorted=False):
         self.min_similarity_threshold = simThreshold
         self.G = nx.Graph()
         self.listOfClusters = []
         self.clusterId = 0
         self.indexer = indexer
+        self.sorted = sorted
 
     def random_order(self, BF_list): 
         
@@ -81,7 +82,7 @@ class staticLinker:
         return sim
 
 
-    def staticLinkage(self, DBs): 
+    def staticLinkage(self, DBs, similarityThreshold=0.75): 
         # input 
         # D --> Party 𝑃𝑖’s BFs
         num_of_parties = len(DBs)
@@ -96,7 +97,7 @@ class staticLinker:
         # map --> one to one mapping algo
 
         # min_similarity_threshold (st) --> Minimum similarity threshold to classify record sets
-        min_similarity_threshold = 0.75
+        min_similarity_threshold = similarityThreshold
         # min_subset_size (sm) --> Minimum subset size, with 2 ≤ 𝑠𝑚 ≤ 𝑝
         min_subset_size = 2
 
@@ -113,7 +114,12 @@ class staticLinker:
         # order databases 
         # choose between random_order or sorted_order 
         # sorted_order is more efficient
-        DBs = self.random_order(DBs)
+        if self.sorted:
+            DBs = self.sorted_order(DBs)
+            print("Using sorted ordering function")
+        else:
+            DBs = self.random_order(DBs)
+            print("Using random ordering function")
        
        # Needs explanation here
         for i in range(num_of_parties-1):

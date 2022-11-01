@@ -26,10 +26,11 @@ class metrics:
         self.groundTrueClusters = None
         self.dynamicRuntimes = [] # Average runtime for dynamic insert
         self.scoreslist = []
+        self.clusterCount = 0
 
     def update(self):
         self.scoreslist = self.computeAllClusterPurities()
-        print(self.scoreslist)
+        #print(self.scoreslist)
         self.getAveragePurity(self.scoreslist)
         self.getPerfectPurityPercentage(self.scoreslist)
         self.clustersWithMatches = self.findNumberOfClustersWithAtLeastNRows(2)
@@ -40,9 +41,13 @@ class metrics:
         print("Average Cluster Purity:", self.averageClusterPurity)
         print("Perfect Clusters: ", self.perfectClustersPercent)
         print("Clusters with matches: ", self.clustersWithMatches)
+        self.graphs()
+        self.linkageUnit.shutdown()
 
+    def graphs(self):
         metrics.displayDynamicInsertionTimeTrend(self.dynamicRuntimes)
         metrics.getPurityDistribution(self.scoreslist)
+        self.clusterSizeDistribution()
 
     def displayLatest(self):
         self.update()
@@ -50,11 +55,11 @@ class metrics:
 
     def displayDynamicInsertionTimeTrend(dynamicRuntimes):
         # outputs a trend plot showing how the performance of insertion changes as more rows get inserted
-        numOfDivisions = 10
+        numOfDivisions = 20
         divisionSize = len(dynamicRuntimes)/numOfDivisions
 
         listOfDivisionAverages = []
-        counts = [i for i in range(0,numOfDivisions)]
+        counts = [i*divisionSize for i in range(0,numOfDivisions)]
 
         for i in range(0,numOfDivisions):
             startIdx = int(i*divisionSize)
@@ -67,8 +72,8 @@ class metrics:
             listOfDivisionAverages.append(avr_division_i)
         
         plt.plot(counts, listOfDivisionAverages)
-        plt.title(f"Time it takes on average to complete 1 dynamic insertion when ~= i*{divisionSize} records already dynamically inserted")
-        plt.xlabel("i")
+        plt.title(f"Time it takes on average to complete 1 dynamic insertion when i records already dynamically inserted")
+        plt.xlabel("Number of records already dynamically inserted")
         plt.ylabel("avr time")
         plt.show() 
 
@@ -89,7 +94,7 @@ class metrics:
     def getPurityDistribution(purityScoreList):
 
         distributionSegments = ["0-9","10-19","20-29","30-39","40-49","50-59","60-69","70-79","80-89","90-100"]
-        frequencyBySegment = [0 for i in range(0,10)]
+        frequencyBySegment = [0 for _ in range(0,10)]
 
         for score in purityScoreList:
             scoreSegment = int(score/10)
@@ -98,16 +103,31 @@ class metrics:
                 scoreSegment=9
             
             frequencyBySegment[scoreSegment] = frequencyBySegment[scoreSegment]+1
-        
-        plt.plot(distributionSegments, frequencyBySegment)
+            
+        ttlCluster = sum(frequencyBySegment)
+        probabilityBySegment = [frequencyOfCluster/ttlCluster for frequencyOfCluster in frequencyBySegment]
+
+        plt.bar(distributionSegments, probabilityBySegment)
         plt.title(f"Distribution of Cluster's assigned correctness")
         plt.xlabel("purity score (%)")
-        plt.ylabel("frequency")
+        plt.ylabel("probability")
         plt.show() 
+
+    def clusterSizeDistribution(self):
+        ourClusterList = self.linkageUnit.clusterlist.clusterList
+
+        clusterSizeList = [cluster.getNumberOfStoredRows() for cluster in ourClusterList]
+
+        plt.hist(clusterSizeList,rwidth = 0.7)
+        plt.xlabel('Row conut inside cluster')
+        plt.ylabel('frequency')
+        plt.show()
+        plt.show()
      
     
     def computeAllClusterPurities(self):
         ourClusterList = self.linkageUnit.clusterlist.clusterList
+        self.clusterCount = len(ourClusterList)
         scoreList = []
 
         for cluster in ourClusterList:
@@ -137,13 +157,12 @@ class metrics:
         correspondingClusters = []
         for linkedRow in linkedRows: # Loop through cluster rows
             for groundTrueCluster in self.groundTrueClusters: # Ground truth clusters
-                if linkedRows == groundTrueCluster.getClusterRowObjList():
+                if linkedRows == groundTrueCluster.getClusterRowObjList():                  
                     return 100 # If there is a ground true cluster with exact same rows in same order then return 100%
             foundCluster = self.findRowInGroundTruth(linkedRow)
-            correspondingClusters.append(foundCluster)
-                
+            correspondingClusters.append(foundCluster)                
         
-        #print(correspondingClusters)
+        
         # list of clusters, each has at least one row same as input cluster
         # trying to find highest frequency cluster
         highestfrequency = 0
@@ -154,14 +173,18 @@ class metrics:
                 highestfrequency = frequency
                 highestFreqCluster = cluster
 
+        if highestfrequency == 1:
+            return 0
+
         for row in highestFreqCluster.getClusterRowObjList():
             matchedRows = 0
             for matchedRow in linkedRows:
                 if row.rowId == matchedRow.rowId:
                     matchedRows += 1
 
-
-        return (matchedRows / totalRows) * 100 # percentage 
+        purityScore = (matchedRows / totalRows) * 100
+        #print("PurityScore:",purityScore,linkedCluster)
+        return purityScore # percentage 
 
     def clusterRowsMatchFraction(cluster, secondCluster):
         assert type(cluster) == Cluster
@@ -172,7 +195,7 @@ class metrics:
                 #print(row.rowId,srow.rowId)
                 if row.rowId == srow.rowId:
                     match += 1
-                    print("matched")
+                    #print("matched")
 
         matchScore = match / numberofRows
         #print(matchScore)
@@ -184,7 +207,7 @@ class metrics:
             for trueRow in groundTrueCluster.getClusterRowObjList(): # Compare every row in ground truth to input
                 if row.rowId == trueRow.rowId: # Find the row based on rec_id
                     foundCluster = groundTrueCluster
-                    return foundCluster
+                    return foundCluster                
         if foundCluster == None:
             print("Metrics error! Row not found in ground truth cluster list")
         return foundCluster
@@ -294,7 +317,8 @@ class metrics:
         # First populate AllRows with all rows in all clusters
         for cluster in clusterList:
             assert type(cluster) == Cluster
-            for row in cluster.getClusterRowObjList():
+            clusterRows = cluster.getClusterRowObjList()
+            for row in clusterRows:
                 AllRows.append(row)
 
         uniqueDbIds = self.findUniqueDbIds(AllRows)
@@ -304,20 +328,23 @@ class metrics:
         RowLists = []
         highestId = 0
         for id in uniqueDbIds:
+            if id == 0:
+                print("Error imminent: DB of id 0, index -1 will not exist.")
             if id > highestId:
                 highestId = id
+        # Highest id number has been found.
 
         for i in range(0,highestId):
             Db = []
             RowLists.append(Db)
-            # Result is empty lists from 0 to highestId - 1
+        # Result is empty lists from indexes 0 to highestId - 1
 
         #print(RowLists)
 
-        # Then split AllRows based on row.DbId into lists at index DbId -1 inside of RowLists.
+        # Then split AllRows based on row.DbId into lists at index DbId-1 inside of RowLists.
         for row in AllRows:
             DbIndex = row.DbId-1
             RowLists[DbIndex].append(row)
-        
+            
         return RowLists
 

@@ -1,4 +1,4 @@
-import ClientCommunicator
+from ClientCommunicator import ClientCommunicator
 
 encoder = ClientCommunicator()
 encoder.connectToServer("127.0.0.1", 43555)

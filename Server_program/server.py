@@ -2,8 +2,9 @@ import socket
 import selectors
 import types
 import time
-import sys
-
+import sys, os
+parentdir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(parentdir)
 from clustering.staticLinkage import *
 from data_structures.ClusterList import ClusterList
 from communication.client import client
@@ -18,7 +19,7 @@ from data_structures.Indixer import Indexer
 
 
 class Server:
-    def __init__(self, maxConnections):
+    def __init__(self, maxConnections, sortedOrdering=False, similarityThreshold=0.75, comparisonThreshold=0.8):
         self.run = False
         ipv4 = socket.AF_INET
         tcp = socket.SOCK_STREAM
@@ -27,11 +28,14 @@ class Server:
         self.maxConnections = maxConnections
         self.connectedClients = []
         self.indexer = None
-        self.clusterlist = ClusterList(certaintyThreshold = 0.8,clusterAggrFunction = AggrFunct.MEAN,indexer = self.indexer)
+        self.clusterlist = ClusterList(certaintyThreshold = comparisonThreshold,clusterAggrFunction = AggrFunct.MEAN,indexer = self.indexer)
+        self.simThresh = similarityThreshold
 
         self.metric = metrics(self)
         self.startTime = 0
         self.result = results()
+        self.sortedOrdering = sortedOrdering
+        print("Using simThresh:", self.simThresh, "and compThresh:", comparisonThreshold)
 
     def runtime(self):
         return time.time() - self.startTime
@@ -45,15 +49,15 @@ class Server:
         # Initialise socket
         host = ''
         port = int(port)
-        print("Socket successfully created")
+        #print("Socket successfully created")
 
         # Bind the socket to a port
         self.server_socket.bind((host, port))
-        print("socket binded to %s" % (port))
+        #print("socket binded to %s" % (port))
 
         # put the socket into listening mode
         self.server_socket.listen(self.maxConnections)  
-        print("socket is listening")
+        #print("socket is listening")
         self.server_socket.setblocking(False)
         self.selector.register(self.server_socket, selectors.EVENT_READ, data=None)
 
@@ -106,6 +110,13 @@ class Server:
                     self.acceptNewConnection(key.fileobj)
                 else:
                     self.serve_client(key, mask)
+
+        # When server shuts down, return AveragePrityPercentage,PerfPurityPercentage
+        self.metric.update()
+        avgClusPur = self.metric.averageClusterPurity
+        perfClus = self.metric.perfectClustersPercent
+        return avgClusPur, perfClus
+        
 
     def serve_client(self,key, mask):
         connSocket = key.fileobj
@@ -200,16 +211,17 @@ class Server:
 
         print("Static Linkage Module calling...")
         # Initialise staticLinker
-        staticLink = staticLinker(indexer=self.indexer)
+        staticLink = staticLinker(indexer=self.indexer, sorted=self.sortedOrdering)
 
         self.metric.beginLinkage
-        output = staticLink.staticLinkage(dbs)
+        output = staticLink.staticLinkage(dbs, similarityThreshold=self.simThresh)
         self.metric.finishLinkage()
         print("Static Linkage Module finished")
         for cluster in output:
             assert type(cluster) == Cluster
             self.clusterlist.addClusterStaticly(cluster)
         print("Static Clusters added to linkage unit")
+        #self.result.saveClusters(self.clusterlist)
 
 
     def indexerFormatting(self):
@@ -225,9 +237,10 @@ class Server:
         return returnVal
       
     def saveConnectedClients(self):
-        # Save current connections to "previousConnections.txt" for later reloading.
+        # Save current connections to "previousConnections.pkl" for later reloading.
         # Stores each client object by mapping address to clientId
-
+        # Will require additional functionality of communication system to reconnect disconnected clients when they make a request.
+        # Beyond scope of PACE project.
         pass
 
     def generateListofRowLists(self):
@@ -250,8 +263,13 @@ def main():
     argHandler.handleArguments()
     maxConns = argHandler.maxConnections
     port = argHandler.port
+    if argHandler.sortedOrdering:
+        server = Server(maxConns, sortedOrdering = True, similarityThreshold=argHandler.simThresh, comparisonThreshold=argHandler.compThresh)
+    else:
+        server = Server(maxConns)
 
-    server = Server(maxConns)
+
+    
     server_socket = server.setUpSocketOnCurrentMachine(port)
     if argHandler.loadFromFile:
         server.launchServer(loadingClusterList=argHandler.loadFromFile)
@@ -261,3 +279,11 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+corruption_levels = [0,20,40]
+ordering_function = ["random","ordered"]
+bloomFilterLength = [20, 50, 100, 500]
+comparison_threshold_dynamic = [0.4,0.7,1]
+staticLinkageMinSimilairty = [0.5,0.75,0.85]

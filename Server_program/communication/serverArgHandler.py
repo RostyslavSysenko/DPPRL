@@ -6,6 +6,10 @@ class argumentHandler:
         self.port = 43555 # Default
         self.maxConnections = 15 # Default
         self.loadFromFile = False
+        self.sortedOrdering = False
+        self.thresholdSpecified = False
+        self.simThresh = 0.8
+        self.compThresh = 0.8
         
     
     def handleArguments(self):
@@ -29,7 +33,15 @@ class argumentHandler:
         elif self.argv[1]: # If there are no options then the first parameter will be the maxConnections
             self.maxConnections = int(self.argv[1])
 
-        # Find if there is a port argument
+        if optionsExist & self.thresholdSpecified:
+            self.simThresh = float(self.argv[3])
+            self.compThresh = float(self.argv[4])
+
+        elif self.thresholdSpecified:
+            self.simThresh = float(self.argv[2])
+            self.compThresh = float(self.argv[3])
+
+        # Find if there is a port argument # NEEDS UPDATING FOR IF THRESHOLD VALS
         portArgExists = False
         lastArg = len(self.argv) - 1
         if optionsExist & argCount >= 3:
@@ -42,7 +54,7 @@ class argumentHandler:
             portArg = self.argv[lastArg]
             self.port = portArg
                 
-        #except:
+        #except: "python -u ./Server_program" + ordFunc + 15 + " " + str(statThres) + " " + str(dynThresh) + " " + 43555
         #    print('server.py -options maxConnections port')
         #    sys.exit(2)
 
@@ -60,13 +72,22 @@ class argumentHandler:
                     if char == "f":
                         self.loadFromFile = True
 
-                    if char == "l":
-                        pass
+                    if char == "o":
+                        self.sortedOrdering = True
+
+                    if char == "t":
+                        self.thresholdSpecified = True
+
+                    
 
 
         return isOptions
 
     def definePreviousConnections(self):
+        """
+        Future
+        """
+
         # THIS FUNCTION CAN BE ADAPTED FOR previousConnections
         # Before: storage of connection address to match to clientId/jsonFile
         # And: Load clients from local json files

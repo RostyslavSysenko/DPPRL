@@ -23,11 +23,11 @@ class ClientCommunicator:
         self.port = port        
 
         self.soc = socket.socket(ipv4, tcp)
-        print("Client socket successfully created")
+        #print("Client socket successfully created on port", self.port)
 
         # connecting to the server
         self.soc.connect((self.host, self.port))
-        print("the socket has successfully connected to server via port ", self.port)  
+        #print("the socket has successfully connected to server")  
 
     def waitForAcknowledge(self):
         # Wait until server acknowledges before continuing.        

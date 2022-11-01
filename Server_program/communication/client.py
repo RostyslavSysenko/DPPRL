@@ -10,15 +10,15 @@ Attributes that we want to store per client
 import json
 import socket
 import sys, os
-from data_structures.Utilities import *
-from clustering.DynamicClustering import DynamicClusterer
-
-#from server import *
+parentdir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(parentdir)
 
 parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parentdir)
 
 # Internal imports
+from data_structures.Utilities import *
+from clustering.DynamicClustering import DynamicClusterer
 from data_structures.Utilities import *
 
 class client:
@@ -117,6 +117,7 @@ class client:
 
         if rcvd.startswith("SAVECLUSTERS"):
             print("Saving clusters")
+            self.connectedServer.result.saveClusters(self.connectedServer.clusterlist)
             self.connectedServer.result.saveClusterList(self.connectedServer.clusterlist)
 
         
