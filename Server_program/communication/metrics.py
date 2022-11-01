@@ -25,12 +25,13 @@ class metrics:
         self.initialRuntime = 0
         self.groundTrueClusters = None
         self.dynamicRuntimes = [] # Average runtime for dynamic insert
+        self.scoreslist = []
 
     def update(self):
-        scoreslist = self.computeAllClusterPurities()
-        print(scoreslist)
-        self.averageClusterPurity = self.getAveragePurity(scoreslist)
-        self.perfectClustersPercent = self.getPerfectPurityPercentage(scoreslist)
+        self.scoreslist = self.computeAllClusterPurities()
+        print(self.scoreslist)
+        self.getAveragePurity(self.scoreslist)
+        self.getPerfectPurityPercentage(self.scoreslist)
         self.clustersWithMatches = self.findNumberOfClustersWithAtLeastNRows(2)
         
     
@@ -41,7 +42,7 @@ class metrics:
         print("Clusters with matches: ", self.clustersWithMatches)
 
         metrics.displayDynamicInsertionTimeTrend(self.dynamicRuntimes)
-        metrics.getPurityDistribution(self.computeAllClusterPurities())
+        metrics.getPurityDistribution(self.scoreslist)
 
     def displayLatest(self):
         self.update()
@@ -76,7 +77,7 @@ class metrics:
         pureNum = 0 
         for score in purityScoresList:
             ttl = ttl+1
-            if score ==1:
+            if score == 100:
                 pureNum= pureNum+1
                 
         self.perfectClustersPercent =  pureNum/ttl
@@ -124,6 +125,7 @@ class metrics:
         # Will be calling cluster methods on input
         assert type(linkedCluster) == Cluster
         totalRows = linkedCluster.getNumberOfStoredRows()
+        linkedRows = linkedCluster.getClusterRowObjList()
         
         # Find ground truth if not done already.
         if self.groundTrueClusters == None:
@@ -133,10 +135,10 @@ class metrics:
 
         # Find corresponding clusters in ground truth, if they contain a common row to our input then add them to the list
         correspondingClusters = []
-        for linkedRow in linkedCluster.getClusterRowObjList(): # Loop through cluster rows
+        for linkedRow in linkedRows: # Loop through cluster rows
             for groundTrueCluster in self.groundTrueClusters: # Ground truth clusters
-                if linkedCluster.getClusterRowObjList() == groundTrueCluster.getClusterRowObjList():
-                    return 1 # If there is a ground true cluster with exact same rows in same order then return 1
+                if linkedRows == groundTrueCluster.getClusterRowObjList():
+                    return 100 # If there is a ground true cluster with exact same rows in same order then return 100%
             foundCluster = self.findRowInGroundTruth(linkedRow)
             correspondingClusters.append(foundCluster)
                 
@@ -147,18 +149,19 @@ class metrics:
         highestfrequency = 0
         highestFreqCluster = None
         for cluster in correspondingClusters:
-            frequency = 0
-            # Loop through every other cluster 
-            for otherCluster in correspondingClusters: # count frequency of cluster in otherClusters
-                if correspondingClusters.index(cluster) == correspondingClusters.index(otherCluster):
-                    continue # to avoid comparing cluster with itself.
-                elif metrics.clusterRowsMatchFraction(cluster, otherCluster) > 0.9:
-                    frequency += 1
+            frequency = correspondingClusters.count(cluster)
             if frequency > highestfrequency:
                 highestfrequency = frequency
-                highestFreqCluster = cluster        
-        
-        return (highestfrequency / totalRows) * 100 # percentage 
+                highestFreqCluster = cluster
+
+        for row in highestFreqCluster.getClusterRowObjList():
+            matchedRows = 0
+            for matchedRow in linkedRows:
+                if row.rowId == matchedRow.rowId:
+                    matchedRows += 1
+
+
+        return (matchedRows / totalRows) * 100 # percentage 
 
     def clusterRowsMatchFraction(cluster, secondCluster):
         assert type(cluster) == Cluster
@@ -169,9 +172,10 @@ class metrics:
                 #print(row.rowId,srow.rowId)
                 if row.rowId == srow.rowId:
                     match += 1
+                    print("matched")
 
         matchScore = match / numberofRows
-        print(matchScore)
+        #print(matchScore)
         return matchScore
 
     def findRowInGroundTruth(self,row):
