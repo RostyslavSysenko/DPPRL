@@ -15,6 +15,7 @@ Add to this code rather than replacing it, I know it's not exactly what you need
 
 import json
 import pandas as pd
+from collections import Counter
 
 class frequencyAttack:
     def __init__(self) -> None:
@@ -58,6 +59,11 @@ class frequencyAttack:
     # frequently occurring in the message parameter.
     # first, get a dictionary of each letter and its frequency count
 
+    result = [item for items, c in Counter(self.englishLetterFreq).most common() for item in [items]*c]
+    
+    print("result list", str(result))
+
+    
         letterToFreq = self.getLetterCount(message)
 
     # second, make a dictionary of each frequency count to each letter(s) with that frequency
