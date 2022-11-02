@@ -80,7 +80,7 @@ class Server:
     def acceptNewConnection(self, socket):
         # Establish connection with a client.
         client_socket, client_addr = socket.accept()
-        print('Got connection from', client_addr)
+        #print('Got connection from', client_addr)
         # Disable blocking to preventthe server waiting until socket returns data.
         client_socket.setblocking(False)
         data = types.SimpleNamespace(addr=client_addr,inb=b"",outb=b"")        
@@ -127,8 +127,8 @@ class Server:
                 for connClient in self.connectedClients:
                     if connClient.socket == connSocket:
                         connClient.interpretMessage(rcvd)                        
-            else: # If 
-                print("Closing connection to: ", mask)
+            else: 
+                #print("Closing connection to: ", mask) # mask is not id
                 self.selector.unregister(connSocket)
                 connSocket.close()     
         if mask & selectors.EVENT_WRITE: # If a write event was requested, send the message.
@@ -156,7 +156,7 @@ class Server:
             pass
         if not foundPrevious:
             id = self.findHighestId()
-        print("ASSIGNED ID:",id)
+        #print("ASSIGNED ID:",id)
         return id
 
     def findHighestId(self):

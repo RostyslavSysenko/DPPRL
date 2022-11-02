@@ -126,13 +126,13 @@ class staticLinker:
             tempGraph = nx.Graph()
             Graph_verts = self.initaliseVertices(DBs[i], tempGraph)
 
-            print("Nodes in new graph:", len(Graph_verts))
+            #print("Nodes in new graph:", len(Graph_verts))
             # for DB in index > i 
             for Db in DBs:
                 if DBs.index(Db) <= i:
                     continue
 
-                print("Looking for matches in Db", DBs.index(Db), " which is of size:",len(Db))
+                #print("Looking for matches in Db", DBs.index(Db), " which is of size:",len(Db))
                 counting = 0
 
                 indexerExist = False
@@ -150,7 +150,7 @@ class staticLinker:
                     self.findMatchesinDB(Db, vertice, indexerExists=indexerExist)
 
             G_edges = list(self.G.edges)
-            print("Initial length of G_edges was", len(G_edges))
+            #print("Initial length of G_edges was", len(G_edges))
 
             G_edges_weighted = list(self.G.edges(data=True))
             opt_E = nx.max_weight_matching(self.G)
@@ -169,7 +169,7 @@ class staticLinker:
             #iterate remaining edges 
             #merge cluster vertices 
             Result_edges = list(resultGraph.edges)
-            print("Size of result edges", len(Result_edges))
+            #print("Size of result edges", len(Result_edges))
             for edges in list(Result_edges):
                 node1 = edges[0]
                 node2 = edges[1]
@@ -198,13 +198,13 @@ class staticLinker:
                 # Figure out how to add cluster if we only updated it.
                 
                 #resultGraph = nx.contracted_nodes(resultGraph, node1, node2)
-            print("Current size of clusterlist before next iteration:", len(self.listOfClusters))
+            #print("Current size of clusterlist before next iteration:", len(self.listOfClusters))
                 
             
         final_clusters = resultGraph.nodes
 
        
-        print("Created cluster list of length: ", len(self.listOfClusters))
+        print("Static linkage produces cluster list of length: ", len(self.listOfClusters))
         return self.listOfClusters
 
     def bothNodesAreInClusterList(self,node1,node2):

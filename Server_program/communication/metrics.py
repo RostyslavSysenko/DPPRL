@@ -41,7 +41,7 @@ class metrics:
         print("Average Cluster Purity:", self.averageClusterPurity)
         print("Perfect Clusters: ", self.perfectClustersPercent)
         print("Clusters with matches: ", self.clustersWithMatches)
-        self.graphs()
+        #self.graphs()
         self.linkageUnit.shutdown()
 
     def graphs(self):

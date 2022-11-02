@@ -1,6 +1,5 @@
 import socket
 
-
 class ClientCommunicator:
     def __init__(self) -> None:
         self.soc = None
@@ -27,7 +26,7 @@ class ClientCommunicator:
 
         # connecting to the server
         self.soc.connect((self.host, self.port))
-        #print("the socket has successfully connected to server")  
+        print("the socket has successfully connected to server")  
 
     def waitForAcknowledge(self):
         # Wait until server acknowledges before continuing.        

@@ -1,10 +1,13 @@
-import sys
+import sys, os
+currentdir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(currentdir)
+parentdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(parentdir)
 from fieldtype import FieldType
 from BloomFilter import BF
 from configparser import ConfigParser
 
 class argumentHandler:
-
     def __init__(self, argv=sys.argv, filelocation=''):   
         self.saveOption = False 
         self.dynamicLinkage = False

@@ -32,7 +32,7 @@ class client:
         self.rowList = []
         self.jsonRecords = []
         self.jsonFileName = str(self.clientId) + "_records.json"
-        print("New client with json filename: ", self.jsonFileName)
+        print("New client connected, records stored in json file: ", self.jsonFileName)
 
         self.staticNotDone = False # Used to only print error message once per client who attempts dynamic.
 
@@ -106,6 +106,7 @@ class client:
             # To do: Controller client on server side that sends this command?
             print("Performing static linkage")
             self.connectedServer.doStaticLinkage()
+            self.send("ACK") # Acknowledge when complete, a fileEncoder will disconnect but the clientEncoder needs to this to begin dynamic.
             
         if rcvd.startswith("SAVE"):
             self.saveToJson() # Move this function call if needed to reduce amount of writes to disk (optimise)
@@ -127,7 +128,8 @@ class client:
         if rcvd == 'QUIT':
             # Should save everything (clusters, json objects) before shutting down
             # remove the client socket
-            self.socket.close()            
-            self.connectedServer.run = False # When the client tells the server to shutdown, it will.       
+            print("Server stopped serving.")
+            self.connectedServer.run = False           
+                  
         
 
