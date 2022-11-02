@@ -63,7 +63,11 @@ class frequencyAttack:
     
    # print("result list", str(result))
 
-        res = Counter(self.englishLetterFreq) # - should do frequency
+       # res = Counter(self.englishLetterFreq) # - should do frequency
+
+       counts = Counter(frequencyAttack)
+       for i in frequencyAttack:
+        print(i,counts[i])
 
     
         letterToFreq = self.getLetterCount(message)
