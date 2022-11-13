@@ -4,8 +4,7 @@ Dynamic Privacy Preserving Record Linkage
 Our project is a DPPRL Prototype sponsored by Francisco Partners, who provided us with various research papers, a large sample of synthetic datasets, the BloomFilter.py Module and weekly feedback on our prototype. The aim of the program is to link records from different datasets after applying bloom filter encodings to each record to preserve privacy, we are also aiming to achieve this dynamically by first applying a static record linkage method and then using a cluster matching algorithm to add to the existing clusters. The main goals of our project were to implement our code as an object-oriented design and to make it as modular as possible for compatibility with other opensource code. 
 
 ## Linkit Team
-LinkIt:
-![alt text](https://github.com/RostyslavSysenko/DPPRL/blob/main/img/linkitlogo.png "LinkIt PACE Team")
+LinkIt:![alt text](https://github.com/RostyslavSysenko/DPPRL/blob/main/img/linkitlogo.png "LinkIt PACE Team")
 * Amanda Manadeniya
 * Harry Sackman
 * Majied Sobbi
@@ -73,7 +72,7 @@ In our tests it took 2 minutes to run, this may vary depending on hardware.
 
 ## Future additions to the project
 ### Data storage
-Storing the datasets as JSON takes up a lot of storage space and the datasets do not get loaded back into the model since they are already in the pickled clusterlist, they are stored in this format to enable their usage in SecurityTests. SecurityTests.py created with the intention of attempting a frequency attack on our bloom filter encodings to test and measure the level of privacy that they actually preserve. In practice, the linkage unit should not store this data on disc reduces the complexity of an attack of this nature. Regardless, the encoded rows are all stored in memory so all of the original bloom filter encodings could be recovered with some extra steps either way.
+Storing the datasets as JSON takes up a lot of storage space and the datasets do not get loaded back into the model since they are already in the pickled clusterlist, they are stored in this format to enable their usage in SecurityTests. SecurityTests.py was created with the intention of attempting a frequency attack on our bloom filter encodings to test and measure the level of privacy that they actually preserve. In practice, the linkage unit should not store this data on disc as it reduces the complexity of an attack of this nature. Regardless, the encoded rows are all stored in memory so all of the original bloom filter encodings could be recovered with some extra steps either way.
 
 ### Configuration
 Currently the Server program takes in a lot of parameters such as similarity threshold that could be easier to use if they were stored in a configuration file, ie linkageunit.ini.
