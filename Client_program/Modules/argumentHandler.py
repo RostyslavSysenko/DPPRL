@@ -86,11 +86,7 @@ class argumentHandler:
                         self.staticLink = True
 
                     if char == "d":
-                        self.dynamicLinkage = True  
-
-                    if char == "b":
-                        idx = self.argv.index(arg)
-                        self.bloomFilterOfLength(self.argv[idx]) 
+                        self.dynamicLinkage = True          
 
         return isOptions
 

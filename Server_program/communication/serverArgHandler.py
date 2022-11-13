@@ -54,7 +54,7 @@ class argumentHandler:
             portArg = self.argv[lastArg]
             self.port = portArg
                 
-        #except: "python -u ./Server_program" + ordFunc + 15 + " " + str(statThres) + " " + str(dynThresh) + " " + 43555
+        #except: "python -u ./Server_program/server.py" + ordFunc + 15 + " " + str(statThres) + " " + str(dynThresh) + " " + 43555
         #    print('server.py -options maxConnections port')
         #    sys.exit(2)
 

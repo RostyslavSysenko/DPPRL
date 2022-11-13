@@ -5,7 +5,6 @@ from Modules.argumentHandler import argumentHandler
 from Modules.ClientCommunicator import ClientCommunicator
 from Modules.FileEncoder import FileEncoder
 import time
-import subprocess
 
 
 class ClientEncoder:
@@ -13,16 +12,16 @@ class ClientEncoder:
     This class is designed to simulate the entire process by which multiple file encodings would be completed and sent to the server.
     Configurable settings and will initially be hardcoded for testing purposes.
     corruptionLevels = [0,20,40]
-    sortedOrdering = [True, False] # Boolean ordered = True | False
     bloomFilterLengths = [20, 50, 100, 500]
     """
-    def __init__(self,static,total, corruption=0,bfLen=50):
+    def __init__(self,static,total, corruption=0,bfLen=50,usingCustomLengthDataset=500):
         self.corruptionLevel = corruption
         self.bloomFilterLength = bfLen
         self.port = 43555 # Add as an argument later, not necessary since the networking part of this program is not the focus.
 
         self.numOfStaticClients = static # Assumes these will be the first ones and all afterwards (up to total) are dynamic.
         self.numOfClients = total
+        self.customLength = usingCustomLengthDataset
 
     def runClient(self, filePath,static=False):
         argHandler = argumentHandler()
@@ -43,14 +42,14 @@ class ClientEncoder:
             fileEnc.sendEncodingsDynamic()
         return fileEnc
 
-    def findFilePath(corruption, number):
-        locationString = "./datasets_synthetic/ncvr_numrec_500_modrec_2_ocp_" + str(corruption) + "_myp_" + str(number) + "_nump_5.csv"
-        print("Using file:", locationString)
+    def findFilePath(self,corruption, number):
+        locationString = "./datasets_synthetic/ncvr_numrec_" + str(self.customLength) + "_modrec_2_ocp_" + str(corruption) + "_myp_" + str(number) + "_nump_5.csv"
+        print("Encoding input file:", locationString)
         return locationString
 
     def runAllClients(self):
         for i in range(0,self.numOfClients):
-            datasetPath = ClientEncoder.findFilePath(self.corruptionLevel,i)
+            datasetPath = self.findFilePath(self.corruptionLevel,i)
             if i < self.numOfStaticClients:
                 client = self.runClient(datasetPath, static=True)           
             else: 
@@ -66,26 +65,33 @@ class ClientEncoder:
         communication.connectToServer('127.0.0.1', self.port)
         communication.send(message)
 
-            
-
 def main():
     # Program Usage: ClientEncoder.py staticDatasets totalDatasets corruption bloomfilterLength
     if len(sys.argv)<5:
         print("Not enough arguments")
         print("Program Usage: ClientEncoder.py staticDatasets totalDatasets corruption bloomfilterLength")
         sys.exit(1)
-    elif len(sys.argv)>5:
+    elif len(sys.argv)>6:
         print("Too many arguments")
         print("Program Usage: ClientEncoder.py staticDatasets totalDatasets corruption bloomfilterLength")
 
     # Receive arguments
+    print(sys.argv)
     staticCount = int(sys.argv[1])
     total = int(sys.argv[2])
     corruption = int(sys.argv[3])
     bfLen = int(sys.argv[4])
+    usingArg5 = False
+    if len(sys.argv) > 5:
+        print("USing custom length")
+        customDatasetLength = sys.argv[5]
+        usingArg5 = True
 
     # Initialise program
-    encoders = ClientEncoder(staticCount,total,corruption=corruption,bfLen=bfLen)
+    if usingArg5:
+        encoders = ClientEncoder(staticCount,total,corruption=corruption,bfLen=bfLen, usingCustomLength=customDatasetLength)
+    else:
+        encoders = ClientEncoder(staticCount,total,corruption=corruption,bfLen=bfLen)
     encoders.runAllClients()
 
     # encoders.tellServer("SAVECLUSTERS")

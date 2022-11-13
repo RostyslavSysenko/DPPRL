@@ -86,9 +86,9 @@ class staticLinker:
         # input 
         # D --> Party 𝑃𝑖’s BFs
         num_of_parties = len(DBs)
-        if num_of_parties != 3:
-            print("ERROR Static linkage requires 3 inputs, returning empty list")
-            return []
+        #if num_of_parties != 3:
+        #    print("ERROR Static linkage requires 3 inputs, returning empty list")
+        #    return []
 
         # sim --> Similarity function
 

@@ -59,9 +59,9 @@ class frequencyAttack:
     # frequently occurring in the message parameter.
     # first, get a dictionary of each letter and its frequency count
 
-    #result = [item for items, c in Counter(self.englishLetterFreq).most common() for item in [items]*c]
-    
-   # print("result list", str(result))
+        #result = [item for items, c in Counter(self.englishLetterFreq).most common() for item in [items]*c]
+        
+       # print("result list", str(result))
 
        # res = Counter(self.englishLetterFreq) # - should do frequency
 
@@ -69,7 +69,7 @@ class frequencyAttack:
        for i in frequencyAttack:
         print(i,counts[i])
 
-    
+        
         letterToFreq = self.getLetterCount(message)
 
     # second, make a dictionary of each frequency count to each letter(s) with that frequency

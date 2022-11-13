@@ -41,7 +41,7 @@ class metrics:
         print("Average Cluster Purity:", self.averageClusterPurity)
         print("Perfect Clusters: ", self.perfectClustersPercent)
         print("Clusters with matches: ", self.clustersWithMatches)
-        #self.graphs()
+        self.graphs()
         self.linkageUnit.shutdown()
 
     def graphs(self):
@@ -108,7 +108,7 @@ class metrics:
         probabilityBySegment = [frequencyOfCluster/ttlCluster for frequencyOfCluster in frequencyBySegment]
 
         plt.bar(distributionSegments, probabilityBySegment)
-        plt.title(f"Distribution of Cluster's assigned correctness")
+        plt.title(f"Distribution of Cluster's linkage correctness")
         plt.xlabel("purity score (%)")
         plt.ylabel("probability")
         plt.show() 
@@ -119,7 +119,7 @@ class metrics:
         clusterSizeList = [cluster.getNumberOfStoredRows() for cluster in ourClusterList]
 
         plt.hist(clusterSizeList,rwidth = 0.7)
-        plt.xlabel('Row conut inside cluster')
+        plt.xlabel('Row count inside cluster')
         plt.ylabel('frequency')
         plt.show()
         plt.show()

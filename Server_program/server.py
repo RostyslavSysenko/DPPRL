@@ -192,20 +192,14 @@ class Server:
         dbs = []
         for clients in self.connectedClients:
             assert clients.rowList != None # This indicates static data, if static is done after dynamic this will fail.
-            if foundDb < 3:
-                #staticRecordList = self.staticLinkageFormatting(clients)
-                dbs.append(clients.rowList)
-                foundDb += 1
+            #if foundDb < 3:
+            #staticRecordList = self.staticLinkageFormatting(clients)
+            dbs.append(clients.rowList)
+            #foundDb += 1
         
         # Static linkage with 3 databases
         # To-Do: Scalable for more than 3, ie any databases entered statically before a static link is called (-l)
 
-        dbCount =len(dbs)
-        if dbCount > 3:
-            print("MORE THAN 3 DATABASES")
-            pass
-        elif dbCount < 3:
-            print("There are only ", dbCount, " databases, 3 are required.")
 
         
 
