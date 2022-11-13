@@ -4,15 +4,17 @@ Dynamic Privacy Preserving Record Linkage
 Our project is a DPPRL Prototype sponsored by Francisco Partners, who provided us with various research papers, a large sample of synthetic datasets, the BloomFilter.py Module and weekly feedback on our prototype. The aim of the program is to link records from different datasets after applying bloom filter encodings to each record to preserve privacy, we are also aiming to achieve this dynamically by first applying a static record linkage method and then using a cluster matching algorithm to add to the existing clusters. The main goals of our project were to implement our code as an object-oriented design and to make it as modular as possible for compatibility with other opensource code. 
 
 ## Linkit Team
-![alt text](https://github.com/RostyslavSysenko/DPPRL/tree/main/img/linkitlogo.png "LinkIt PACE Team")
-..* Amanda Manadeniya
-..* Harry Sackman
-..* Majied Sobbi
-..* Rostyslav Sysenko
-..* Samreet Kaur
+LinkIt:
+![alt text](https://github.com/RostyslavSysenko/DPPRL/blob/main/img/linkitlogo.png "LinkIt PACE Team")
+* Amanda Manadeniya
+* Harry Sackman
+* Majied Sobbi
+* Rostyslav Sysenko
+* Samreet Kaur
 
 ## Program design
-![alt text](https://github.com/RostyslavSysenko/DPPRL/tree/main/img/systemdiagram.png  "System Diagram")
+
+![alt text](https://github.com/RostyslavSysenko/DPPRL/blob/main/img/systemdiagram.png  "System Diagram")
 
 ## Program usage
 This project is divided into two distinct program, there is the server program which runs on the linkage unit and performs the static and/or dynamic linkage; and there is the client program which runs wherever the datasets are stored (data provider).
