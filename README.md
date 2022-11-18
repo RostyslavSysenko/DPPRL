@@ -22,9 +22,11 @@ At the core of this system are the following ideas:
 4. Blocking indexing is used to make things faster
 
 The value of this prototype is in laying the groundwork for next generation DPPRL system and on it own this system as of now is not ready for the real world. More specifically our contributions to the future generation DPPRL systems are outlined below:
-- This project produced many reusable classes/modules which can be reused or built up on as part of other DPPRL systems
-- This project discovered what things seem to work well and what things don't seem to work well
-- This project produced a functional system along with feedback and system evaluation mechanism and suggestions for improvement so that anyone who is willing to work on those, may end up producing something that is practically usable.
+1. This project evaluated quality of a particular DPPRL solution so that to inform further research and development of such systems.
+2. This project proposed ideas for how the current solution may be improved so those interested may build up on the current system. 
+3. This project produced many reusable classes/modules which can be reused or built up on as part of other DPPRL systems. 
+
+Since the current system was designed to be an experimental prototype, therefore thorough and up to date documentation was not prioritized. Yet, if these ideas elicit interest, documentation can always be improved to allow for more effective accomplishment of contributions 2 and 3.
 
 ## Whats inside the box?
 ### Static Linkage
@@ -101,6 +103,10 @@ On windows, the program demonstration can run without needing to use a CLI. Simp
 3. Once the program is complete, the program's performance metrics are displayed along with some matplotlib graphs.
 In our tests it took 2 minutes to run, this may vary depending on hardware.
 
+## Guide for reusing system components or understanding the code
+- get high level idea of the system by reading the readme.md.
+- some of the code is documented with python docs and comments and descriptive variable name.
+- look into testing file where the use cases for different functions, methods and classes are documented.
 
 ## Evaluation of outcomes
 To evaluate the system we utilized purity scores (we created a new score and called it purity score even though such metric already exists and means something else) and record of time each dynamic insertion takes. Roughly speaking, what we called purity score is a score that measures the similarity between each cluster our algorithm produced and the most similar cluster in ground truth dataset.
